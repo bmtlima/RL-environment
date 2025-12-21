@@ -1,0 +1,358 @@
+,#,App Name,App Description,Prompt,Addition for CLI Tools,Rubric
+0,1,Financial Dashboard,"A web application that provides real-time stock data, live financial news, and an AI-powered chat with web search, including full authentication and database support.
+","# Task
+Create a fully functional Bloomberg Terminal-style dashboard with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a web application that allows users to view real-time stock prices, browse continuously updating financial news, and chat with an AI assistant that can answer questions using web search and stored data. The application should support full authentication, persistent database storage, and an integrated stock chart with interactive date-range selection. In addition, the application should allow users to select a portion of the stock price chart and automatically send the corresponding date range to the AI assistant, which should reference that timeframe in its responses, and provide a public, real-time chat forum where all authenticated users can post messages that update live for everyone.
+
+## Feature Requirements
+1. Implement user registration functionality.
+2. Implement user login functionality.
+3. Implement user logout functionality.
+4. Persist all user accounts and information with database-backed durable storage.
+5. Display real-time stock prices with continuous updates and no manual refresh required.
+6. Support viewing data for multiple stock symbols concurrently.
+7. Provide a search or selection UI for entering or choosing valid stock symbols.
+8. Render interactive stock charts with correct price history data.
+9. Display a real-time financial news feed of real articles, automatically updating the displayed news items without requiring page reloads.
+10. Filter all news items to include only finance- or stock-related articles.
+11. Display an on-screen AI chat interface at all times within the main application view.
+12. Allow users to send typed messages to the AI assistant.
+13. Generate real AI assistant responses for every valid user message.
+14. Support integrated web search as part of the AI assistant's response-generation process.
+15. Display a persistent, scrollable conversation history for the AI assistant chat.
+16. Allow users to select a date range directly on the stock chart.
+17. Visually highlight the selected chart date range.
+18. Automatically send the chart-selected date range into the AI chat as contextual input whenever a user selects a range.
+19. Ensure AI responses explicitly reference and incorporate the selected date-range context in their analysis.
+20. Implement an in-application public chat room accessible to authenticated users.
+21. Allow authenticated users to post messages to the public forum.
+22. Ensure that messages in the public forum include correct sender identification and a timestamp.
+23. Update public chat messages in real time for all connected users with no manual page reload.
+24. Maintain a visible, scrollable history of recent public chat messages for users to review.
+",You are working with a Next.js template within an isolated Docker container. You should use Supabase for all authentication and database features unless specified otherwise.,"# Rubric Items
+1. Application implements user registration functionality.
+2. Application implements user login functionality.
+3. Application implements user logout functionality.
+4. Application persists all user accounts and information with database-backed durable storage.
+5. Application displays real-time stock prices with continuous updates and no manual refresh required.
+6. Application supports viewing data for multiple stock symbols concurrently.
+7. Application provides a search or selection UI for entering or choosing valid stock symbols.
+8. Application renders interactive stock charts with correct price history data.
+9. Application displays a real-time financial news feed of real articles, automatically updating the displayed news items without requiring page reloads.
+10. Application filters all news items to include only finance- or stock-related articles.
+11. Application displays an on-screen AI chat interface at all times within the main application view.
+12. Application allows users to send typed messages to the AI assistant.
+13. Application generates real AI assistant responses for every valid user message.
+14. Application supports integrated web search as part of the AI assistant's response-generation process.
+15. Application displays a persistent, scrollable conversation history for the AI assistant chat.
+16. Application allows users to select a date range directly on the stock chart.
+17. Application visually highlights the selected chart date range.
+18. Application automatically sends the chart-selected date range into the AI chat as contextual input whenever a user selects a range.
+19. Application ensures AI responses explicitly reference and incorporate the selected date-range context in their analysis.
+20. Application implements an in-application public chat room accessible to authenticated users.
+21. Application allows authenticated users to post messages to the public forum.
+22. Application ensures that messages in the public forum include correct sender identification and a timestamp.
+23. Application updates public chat messages in real time for all connected users with no manual page reload.
+24. Application maintains a visible, scrollable history of recent public chat messages for users to review.
+"
+1,2,Hospital Dashboard,"A real-time collaborative hospital board that displays units, beds, and patient status, allowing multiple roles (admin, nurse, physician) to update information simultaneously with full authentication and database support.","# Task
+Create a multi-user patient tracking board for a hospital with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a web application that provides a real-time, shared hospital patient board. The system should support three user roles—admin, nurse, and physician—each with specific permissions. Users should be able to view units, beds, and patient assignments in a live-updating board. Nurses and physicians can update patient statuses and notes, while admins can manage units, beds, and users. The board must synchronize updates across all users instantly and display who is currently online. In addition, the application should provide a public forum chat accessible to all admins, nurses, and physicians with real-time updates and clear sender attribution, and allow admins to create emergency alerts that broadcast instantly as a persistent banner to all users until dismissed.
+
+## Feature Requirements
+1. Implement user registration functionality.
+2. Implement user registration supporting admin, nurse, and physician roles.
+3. Implement user login functionality.
+4. Implement user logout functionality.
+5. Persist all user accounts, role data, hospital units, beds, encounters, and patient board information using a durable, database-backed storage system.
+6. Implement a hospital unit structure allowing admins to define and store named units (e.g., ICU, ER, 3A).
+7. Implement bed management within each unit by defining beds and storing their associated metadata.
+8. Support assigning patients to beds through encounter records.
+9. Display a live-updating patient board shared across all connected users.
+10. Synchronize all edits—including patient statuses, notes, and tasks—in real time for all users without requiring page refreshes.
+11. Allow multiple users to edit the board simultaneously without conflicts.
+12. Display presence indicators showing which users are currently online.
+13. Display a bed card that shows the patient's name.
+14. Display a bed card that shows the patient's MRN (medical record number).
+15. Display a bed card that shows the patient's age or date of birth.
+16. Display a bed card that shows the assigned nurse.
+17. Display a bed card that shows the patient’s current status (e.g., admitted, procedure, recovery, discharge-ready, etc.).
+18. Display a bed card that shows a preview of patient notes.
+19. Display a bed card that shows the number of tasks completed and the total number of assigned tasks.
+20. Allow admins to manage hospital units, including creating, editing, and deleting them.
+21. Allow admins to manage beds within units, including creating, editing, and deleting them.
+22. Allow admins to manage user accounts, including creation, modification, and deactivation.
+23. Persist all board data, patient information, and administrative configurations in the database to ensure full durability across sessions.
+24. Implement a public forum chat room accessible to all authenticated admins, nurses, and physicians.
+25. Allow eligible users to post messages to the public forum chat.
+26. Display clear sender attribution for each message, including user name, role, and timestamp.
+27. Update all chat messages in real time for every connected user without requiring page reloads.
+28. Maintain a scrollable history of recent chat messages so users can review prior discussion.
+29. Implement an emergency alert banner system allowing admins to create alerts with at least a title and message, and optional severity or category metadata.
+30. Broadcast newly created emergency alerts instantly to all connected users.
+31. Display all active emergency alerts as prominent banners within the application interface.
+32. Ensure each emergency alert remains visible to a user until they explicitly dismiss it.
+33. Persist active alerts so that users who connect after an alert is created still see all undismissed alerts.
+",You are working with a Next.js template within an isolated Docker container. You should use Supabase for all authentication and database features unless specified otherwise.,"# Rubric Items
+1. Application implements user registration functionality.
+2. Application implements user registration supporting admin, nurse, and physician roles.
+3. Application implements user login functionality.
+4. Application implements user logout functionality.
+5. Application persists all user accounts, role data, hospital units, beds, encounters, and patient board information using a durable, database-backed storage system.
+6. Application implements a hospital unit structure allowing admins to define and store named units (e.g., ICU, ER, 3A).
+7. Application implements bed management within each unit by defining beds and storing their associated metadata.
+8. Application supports assigning patients to beds through encounter records.
+9. Application displays a live-updating patient board shared across all connected users.
+10. Application synchronizes all edits—including patient statuses, notes, and tasks—in real time for all users without requiring page refreshes.
+11. Application allows multiple users to edit the board simultaneously without conflicts.
+12. Application displays presence indicators showing which users are currently online.
+13. Application displays a bed card that shows the patient's name.
+14. Application displays a bed card that shows the patient's MRN.
+15. Application displays a bed card that shows the patient's age or date of birth.
+16. Application displays a bed card that shows the assigned nurse.
+17. Application displays a bed card that shows the patient’s current status.
+18. Application displays a bed card that shows a preview of patient notes.
+19. Application displays a bed card that shows the number of tasks completed and the total number of assigned tasks.
+20. Application allows admins to manage hospital units, including creating, editing, and deleting them.
+21. Application allows admins to manage beds within units, including creating, editing, and deleting them.
+22. Application allows admins to manage user accounts, including creation, modification, and deactivation.
+23. Application persists all board data, patient information, and administrative configurations in the database to ensure full durability across sessions.
+24. Application implements a public forum chat room accessible to all authenticated admins, nurses, and physicians.
+25. Application allows eligible users to post messages to the public forum chat.
+26. Application displays clear sender attribution for each message, including user name, role, and timestamp.
+27. Application updates all chat messages in real time for every connected user without requiring page reloads.
+28. Application maintains a scrollable history of recent chat messages so users can review prior discussion.
+29. Application implements an emergency alert banner system allowing admins to create alerts with at least a title and message, and optional severity or category metadata.
+30. Application broadcasts newly created emergency alerts instantly to all connected users.
+31. Application displays all active emergency alerts as prominent banners within the application interface.
+32. Application ensures each emergency alert remains visible to a user until they explicitly dismiss it.
+33. Application persists active alerts so that users who connect after an alert is created still see all undismissed alerts.
+"
+2,3,Legal Assistant,"A web application that answers legal questions using retrieval-augmented generation over an updatable document knowledge base, with full authentication, file uploads, web search integration, and an AI chat interface.","# Task
+Create an AI legal assistant with RAG over an existing document knowledge base and integrated web search with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a web application that allows users to ask legal questions and receive AI-generated answers supported by retrieval from an internal document knowledge base and real-time web search. Users should be able to upload and update documents, which are stored in a vector database. The AI assistant must incorporate relevant retrieved documents into its responses. The application should include full authentication, persistent storage, and a clean chat interface. In addition, the assistant should support voice dictation so users can speak questions that are transcribed directly into the chat input, and allow users to @-reference specific documents in the knowledge base so that those referenced files are explicitly retrieved and incorporated into the AI’s responses.
+
+## Feature Requirements
+1. Implement user registration functionality.
+2. Implement user login functionality.
+3. Implement user logout functionality.
+4. Persist all user accounts and all stored documents using durable, database-backed storage.
+5. Allow users to upload files into the document knowledge base.
+6. Allow users to update or replace existing uploaded documents.
+7. Integrate Chroma as the vector database for document storage.
+8. Embed and index all documents for retrieval within the vector store.
+9. Provide an AI chat interface that allows users to send questions to the assistant.
+10. Generate AI responses using retrieval-augmented generation that incorporates relevant documents.
+11. Integrate web search to supplement retrieval when generating answers.
+12. Display a persistent conversation history for each user.
+13. Persist all chat logs so users can revisit prior conversations.
+14. Handle all uploaded legal documents securely to protect sensitive information.
+15. Implement voice dictation functionality that allows users to record spoken questions through a microphone control in the chat interface.
+16. Automatically transcribe recorded speech into text and place it into the chat input box.
+17. Allow users to review and edit transcribed text before sending it as a message.
+18. Ensure transcription quality is sufficient to handle common legal terminology accurately.
+19. Support @-referencing of documents using an @-style syntax (e.g., `@Contract_2024`, `@EmployeeHandbook`).
+20. When a document is @-referenced in a user message, explicitly retrieve that document or set of documents from the vector store in addition to any other retrieved materials.
+21. Pass the content and metadata of all @-referenced documents to the AI assistant as high-priority context during response generation.
+22. Ensure the AI assistant explicitly cites or references the @-mentioned documents in its response when appropriate, including summarizing or quoting key sections within permissible limits.
+",You are working with a Next.js template within an isolated Docker container. You should use Supabase for all authentication and database features unless specified otherwise.,"# Rubric Items
+1. Application implements user registration functionality.
+2. Application implements user login functionality.
+3. Application implements user logout functionality.
+4. Application persists all user accounts and all stored documents using durable, database-backed storage.
+5. Application allows users to upload files into the document knowledge base.
+6. Application allows users to update or replace existing uploaded documents.
+7. Application integrates Chroma as the vector database for document storage.
+8. Application embeds and indexes all documents for retrieval within the vector store.
+9. Application provides an AI chat interface that allows users to send questions to the assistant.
+10. Application generates AI responses using retrieval-augmented generation that incorporates relevant documents.
+11. Application integrates web search to supplement retrieval when generating answers.
+12. Application displays a persistent conversation history for each user.
+13. Application persists all chat logs so users can revisit prior conversations.
+14. Application handles all uploaded legal documents securely to protect sensitive information.
+15. Application implements voice dictation functionality that allows users to record spoken questions through a microphone control in the chat interface.
+16. Application automatically transcribes recorded speech into text and places it into the chat input box.
+17. Application allows users to review and edit transcribed text before sending it as a message.
+18. Application ensures transcription quality is sufficient to handle common legal terminology accurately.
+19. Application supports @-referencing of documents using an @-style syntax.
+20. Application retrieves any @-referenced document or set of documents from the vector store in addition to other retrieved materials.
+21. Application passes the content and metadata of all @-referenced documents to the AI assistant as high-priority context during response generation.
+22. Application ensures the AI assistant explicitly cites or references the @-mentioned documents in its response when appropriate, including summarizing or quoting key sections within permissible limits.
+"
+3,4,Pharmacy System,"A multi‑user pharmacy system where patients can browse and order medications while pharmacists manage inventory, process orders, and communicate in real time, with full authentication and database integration.","# Task
+Create a Pharmacy Management System with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a web application that supports two roles—patients and pharmacists. Patients can browse medications, place orders, and track order status. Pharmacists can manage inventory and update order status. The system must support real-time order updates and full authentication with persistent database storage. In addition, pharmacists should be able to send private, real-time messages to one another within the platform with clear sender attribution, and patients should automatically receive email notifications whenever their prescription order status changes.
+
+## Feature Requirements
+1. Implement user registration functionality.
+2. Implement user registration supporting patient and pharmacist roles.
+3. Implement user login functionality.
+4. Implement user logout functionality.
+5. Persist all medications, inventory levels, orders, and user accounts using durable, database-backed storage.
+6. Allow patients to browse available medications with search and filter capabilities.
+7. Allow patients to add selected medications to a shopping cart.
+8. Allow patients to place prescription orders from the contents of their cart.
+9. Allow patients to view a complete history of their past orders.
+10. Display real-time order status for patients, including states such as pending, processing, ready for pickup, and completed.
+11. Provide a pharmacist dashboard for reviewing and managing incoming orders.
+12. Allow pharmacists to update the status of each order.
+13. Allow pharmacists to view and manage current inventory levels for all medications.
+14. Generate low-stock alerts for pharmacists when inventory levels fall below defined thresholds.
+15. Allow pharmacists to mark specific items as out of stock so patients cannot order them.
+16. Persist all order, inventory, and status data in the database to ensure full durability across sessions.
+17. Provide a private messaging interface that is accessible only to authenticated pharmacists.
+18. Allow pharmacists to search for and select another pharmacist to start a private conversation.
+19. Ensure pharmacist-to-pharmacist messages are delivered and displayed in real time to both parties without requiring a page refresh.
+20. Display clear sender attribution, including name and role, along with timestamps for each message in every private conversation.
+21. Maintain a conversation history for each private pharmacist thread so prior messages can be reviewed.
+22. Send an automatic email notification to the patient whenever their prescription order status changes (for example, pending → processing, processing → ready for pickup, ready for pickup → completed).
+23. Include key details in each notification email, such as order identifier, medication summary, previous status, and new status.
+24. Ensure that notification emails are sent reliably and promptly immediately after each order status update is saved in the system.
+25. Follow basic email best practices for all notifications, including a clear subject line indicating the update and appropriate sender information.
+",You are working with a Next.js template within an isolated Docker container. You should use Supabase for all authentication and database features unless specified otherwise.,"# Rubric Items
+1. Application implements user registration functionality.
+2. Application implements user registration supporting patient and pharmacist roles.
+3. Application implements user login functionality.
+4. Application implements user logout functionality.
+5. Application persists all medications, inventory levels, orders, and user accounts using durable, database-backed storage.
+6. Application allows patients to browse available medications with search and filter capabilities.
+7. Application allows patients to add selected medications to a shopping cart.
+8. Application allows patients to place prescription orders from the contents of their cart.
+9. Application allows patients to view a complete history of their past orders.
+10. Application displays real-time order status for patients, including states such as pending, processing, ready for pickup, and completed.
+11. Application provides a pharmacist dashboard for reviewing and managing incoming orders.
+12. Application allows pharmacists to update the status of each order.
+13. Application allows pharmacists to view and manage current inventory levels for all medications.
+14. Application generates low-stock alerts for pharmacists when inventory levels fall below defined thresholds.
+15. Application allows pharmacists to mark specific items as out of stock so patients cannot order them.
+16. Application persists all order, inventory, and status data in the database to ensure full durability across sessions.
+17. Application provides a private messaging interface that is accessible only to authenticated pharmacists.
+18. Application allows pharmacists to search for and select another pharmacist to start a private conversation.
+19. Application ensures pharmacist-to-pharmacist messages are delivered and displayed in real time to both parties without requiring a page refresh.
+20. Application displays clear sender attribution, including name and role, along with timestamps for each message in every private conversation.
+21. Application maintains a conversation history for each private pharmacist thread so prior messages can be reviewed.
+22. Application sends an automatic email notification to the patient whenever their prescription order status changes.
+23. Application includes key details in each notification email, such as order identifier, medication summary, previous status, and new status.
+24. Application ensures that notification emails are sent reliably and promptly immediately after each order status update is saved in the system.
+25. Application follows basic email best practices for all notifications, including a clear subject line indicating the update and appropriate sender information.
+"
+4,5,Drawing Game,"A multiplayer browser game that helps elementary students learn vocabulary words through drawing and guessing in real time, with support for public rooms and full app functionality.","# Task
+Create a multiplayer vocabulary-drawing game for elementary students with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow-up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a fully functional web application modeled after the core mechanics of Skribbl.io. Players should receive vocabulary words and take turns drawing while other players guess the word in real time. The application must support authentication, persistent game state, and real-time multiplayer networking. The system must also support public rooms that users can join through a lobby interface showing occupancy and capacity, and it must provide a replay system that allows users to watch completed drawing sequences after each round ends.
+
+## Feature Requirements
+1. Implement user registration functionality.
+2. Implement user login functionality.
+3. Implement user logout functionality.
+4. Provide a real-time multiplayer drawing canvas that broadcasts drawing activity to all connected players without requiring page refreshes.
+5. Implement a turn-taking system that designates exactly one player as the drawing player while all other players act as guessers.
+6. Assign a vocabulary word to the drawing player at the start of each turn and ensure that only that player can see the word.
+7. Ensure that all vocabulary words are drawn from an age-appropriate list suitable for elementary school students.
+8. Provide a live chat interface that allows players to submit guesses in real time.
+9. Automatically detect when a player’s guess matches the correct word and update game state accordingly.
+10. Track and update scores for each player based on correct guesses and defined scoring rules.
+11. Deliver real-time updates for drawing strokes, guesses, scores, and turn changes to all players without requiring page reloads.
+12. Implement clear game start and game end states so players understand when a match begins, progresses, and concludes.
+13. Persist all user accounts and player score data using durable database-backed storage.
+14. Provide a lobby view that lists all available public rooms.
+15. For each public room shown in the lobby, display its name or identifier, the current number of players, and the maximum capacity.
+16. Allow users to select and join any public room that is not full.
+17. Update lobby information in real time as players join rooms, leave rooms, or new rooms are created.
+18. Clearly indicate in the lobby when a room is full and when it is currently in progress.
+19. Record the drawing strokes for each round in a manner that preserves their exact order and timing.
+20. After a round ends and the correct word has been revealed, allow players to watch a replay of that round’s drawing.
+21. Provide replay playback controls, including at minimum play, pause, and restart.
+22. Ensure replays are synchronized for all players who choose to view them simultaneously.
+23. Persist or cache replay data for at least the duration of the game session so players can rewatch recent rounds.
+",You are working with a Next.js template within an isolated Docker container. You should use Supabase for all authentication and database features unless specified otherwise.,"# Rubric Items
+1. Application implements user registration functionality.
+2. Application implements user login functionality.
+3. Application implements user logout functionality.
+4. Application provides a real-time multiplayer drawing canvas that broadcasts drawing activity to all connected players without requiring page refreshes.
+5. Application implements a turn-taking system that designates exactly one player as the drawing player while all other players act as guessers.
+6. Application assigns a vocabulary word to the drawing player at the start of each turn and ensures that only that player can see the word.
+7. Application ensures that all vocabulary words are drawn from an age-appropriate list suitable for elementary school students.
+8. Application provides a live chat interface that allows players to submit guesses in real time.
+9. Application automatically detects when a player’s guess matches the correct word and updates game state accordingly.
+10. Application tracks and updates scores for each player based on correct guesses and defined scoring rules.
+11. Application delivers real-time updates for drawing strokes, guesses, scores, and turn changes to all players without requiring page reloads.
+12. Application implements clear game start and game end states so players understand when a match begins, progresses, and concludes.
+13. Application persists all user accounts and player score data using durable database-backed storage.
+14. Application provides a lobby view that lists all available public rooms.
+15. Application displays for each public room in the lobby its name or identifier, the current number of players, and the maximum capacity.
+16. Application allows users to select and join any public room that is not full.
+17. Application updates lobby information in real time as players join rooms, leave rooms, or new rooms are created.
+18. Application clearly indicates in the lobby when a room is full and when it is currently in progress.
+19. Application records the drawing strokes for each round in a manner that preserves their exact order and timing.
+20. Application allows players, after a round ends and the correct word has been revealed, to watch a replay of that round’s drawing.
+21. Application provides replay playback controls, including at minimum play, pause, and restart.
+22. Application ensures replays are synchronized for all players who choose to view them simultaneously.
+23. Application persists or caches replay data for at least the duration of the game session so players can rewatch recent rounds.
+"
+5,6,Rental Booking,"A rental marketplace where users can browse, book, and post properties, featuring media uploads, secure authentication, full database integration, and optional end‑to‑end payments.","# Task
+Create a rental booking application with an Airbnb-style layout with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow-up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a fully functional rental booking platform that allows users to browse listings, view property details, and make bookings. The system must support authentication, persistent database storage, and full CRUD operations for listings. The application must also support secure end-to-end payments using a modern payment provider and provide a complete property-posting flow that allows hosts to upload photos and videos for their listings.
+
+## Feature Requirements
+1. Implement user registration functionality.
+2. Implement user login functionality.
+3. Implement user logout functionality.
+4. Store all users, listings, bookings, and associated metadata in a durable database.
+5. Allow users to browse available properties in a structured, visually clear interface.
+6. Provide property search with filters for location, dates, price, and property type.
+7. Display detailed property pages that include descriptions and essential listing information.
+8. Implement a booking flow that includes a date picker, guest count selection, and accurate price calculation.
+9. Allow users to book a property and ensure all booking data is stored in the database.
+10. Allow users to post new rental properties for others to book.
+11. Provide full listing management, including the ability to edit, archive, and delete properties.
+12. Provide each user with a dashboard that displays their trip history and their hosting activity.
+13. Deliver real-time availability updates to ensure that no property can be double-booked.
+14. Persist all bookings and listing metadata in the database in a durable and consistent manner.
+15. Integrate with a secure modern payment provider to process end-to-end payments.
+16. Capture payment details during the booking flow and charge the guest upon booking confirmation or according to the selected payment model.
+17. Record all payment transactions in the database with statuses such as pending, succeeded, failed, or refunded.
+18. Provide user-facing views that display payment-related information such as total cost and payment status.
+19. Handle payment errors gracefully by surfacing clear messages and allowing users to retry or switch payment methods.
+20. Allow hosts to upload multiple photos for each listing as part of the creation and editing flow.
+21. Allow hosts to upload at least one video for each listing.
+22. Provide clear UI controls for adding, previewing, reordering, and removing uploaded photos and videos.
+23. Display uploaded photos prominently on the property detail page using a gallery or carousel.
+24. Display uploaded videos prominently on the property detail page using an embedded video player.
+",You are working with a Next.js template within an isolated Docker container. You should use Supabase for all authentication and database features unless specified otherwise.,"# Rubric Items
+1. Application implements user registration functionality.
+2. Application implements user login functionality.
+3. Application implements user logout functionality.
+4. Application stores all users, listings, bookings, and associated metadata in a durable database.
+5. Application allows users to browse available properties in a structured, visually clear interface.
+6. Application provides property search with filters for location, dates, price, and property type.
+7. Application displays detailed property pages that include descriptions and essential listing information.
+8. Application implements a booking flow that includes a date picker, guest count selection, and accurate price calculation.
+9. Application allows users to book a property and ensures all booking data is stored in the database.
+10. Application allows users to post new rental properties for others to book.
+11. Application provides full listing management, including the ability to edit, archive, and delete properties.
+12. Application provides each user with a dashboard that displays their trip history and their hosting activity.
+13. Application delivers real-time availability updates to ensure that no property can be double-booked.
+14. Application persists all bookings and listing metadata in the database in a durable and consistent manner.
+15. Application integrates with a secure modern payment provider to process end-to-end payments.
+16. Application captures payment details during the booking flow and charges the guest upon booking confirmation or according to the selected payment model.
+17. Application records all payment transactions in the database with statuses such as pending, succeeded, failed, or refunded.
+18. Application provides user-facing views that display payment-related information such as total cost and payment status.
+19. Application handles payment errors gracefully by surfacing clear messages and allowing users to retry or switch payment methods.
+20. Application allows hosts to upload multiple photos for each listing as part of the creation and editing flow.
+21. Application allows hosts to upload at least one video for each listing.
+22. Application provides clear UI controls for adding, previewing, reordering, and removing uploaded photos and videos.
+23. Application displays uploaded photos prominently on the property detail page using a gallery or carousel.
+24. Application displays uploaded videos prominently on the property detail page using an embedded video player.
+"
