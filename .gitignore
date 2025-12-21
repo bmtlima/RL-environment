@@ -50,3 +50,6 @@ Thumbs.db
 # test scripts
 test_phase1.py
 test_phase1_diff.py
+
+# TODO
+TODO.md
