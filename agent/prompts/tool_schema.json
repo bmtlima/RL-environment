@@ -61,6 +61,17 @@
   {
     "type": "function",
     "function": {
+      "name": "install_deps",
+      "description": "Install project dependencies using the package manager (pnpm or npm). Automatically uses caching and silent mode. This is more efficient than running 'pnpm install' manually with run_command because it handles package manager detection and uses optimized flags.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
       "name": "start_server",
       "description": "Start the development server in the background. This runs 'pnpm dev' without blocking, allowing you to continue working. The server will be accessible at http://localhost:3000. Use this instead of running 'pnpm dev' directly with run_command, which would hang forever.",
       "parameters": {

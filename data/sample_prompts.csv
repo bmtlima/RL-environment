@@ -1,0 +1,6 @@
+prompt,difficulty,expected_features
+"Create a simple counter app with increment and decrement buttons. Style it nicely with Tailwind CSS.",easy,"Counter display, increment button, decrement button, Tailwind styling"
+"Build a todo list application where users can add, complete, and delete tasks. Each task should have a checkbox and delete button.",medium,"Add task input, task list display, checkbox toggle, delete functionality"
+"Create a weather dashboard that displays mock weather data (temperature, conditions, humidity) for a city. Use a nice card-based layout.",medium,"Weather card, temperature display, conditions icon, humidity percentage, responsive layout"
+"Build a simple blog homepage that displays 3 blog post cards with title, excerpt, author, and date. Make it look professional.",easy,"Blog post cards, title and excerpt, author info, date display, grid layout"
+"Create a contact form with name, email, and message fields. Add form validation and show a success message when submitted.",medium,"Form inputs, validation, submit button, success message, error handling"

@@ -319,6 +319,76 @@ class Tools:
             }
         )
 
+    def install_deps(self) -> ToolResult:
+        """
+        Install dependencies using pnpm, forcing the architecture to match Node.js.
+        """
+        try:
+            # 1. CLEANUP
+            # Clear old artifacts to ensure fresh resolution
+            items_to_delete = ["pnpm-lock.yaml", "package-lock.json", "node_modules"]
+            for item in items_to_delete:
+                item_path = self.sandbox.workspace_dir / item
+                if item_path.exists():
+                    try:
+                        if item_path.is_dir():
+                            import shutil
+
+                            shutil.rmtree(item_path)
+                        else:
+                            item_path.unlink()
+                    except Exception:
+                        pass
+
+            # 2. DETECT NODE ARCHITECTURE
+            # We ask Node directly what architecture it is running on.
+            # This bypasses the Python Rosetta/Intel emulation lies.
+            print("🕵️ Detecting Node.js architecture...")
+            arch_check = self.sandbox.execute('node -p "process.arch"')
+            node_arch = arch_check.stdout.strip() if arch_check.success else "arm64"
+            print(f"🎯 Target Architecture: {node_arch}")
+
+            # 3. PREPARE ENVIRONMENT
+            # We force pnpm to install for the NODE architecture, not the Python one.
+            install_env = {
+                "CI": "false",
+                "npm_config_arch": node_arch,  # Force pnpm to use Node's arch
+                "npm_config_platform": (
+                    "darwin"
+                    if "darwin" in self.sandbox.execute("uname").stdout.lower()
+                    else "linux"
+                ),
+            }
+
+            # 4. INSTALL (Standard pnpm)
+            print(f"📦 Installing dependencies with pnpm for {node_arch}...")
+            result = self.sandbox.execute(
+                "pnpm install --no-frozen-lockfile", timeout=600, env=install_env
+            )
+
+            # 5. REBUILD (The Safety Net)
+            if result.success:
+                print("🔧 Rebuilding native modules...")
+                self.sandbox.execute("pnpm rebuild", env=install_env)
+
+                return ToolResult(
+                    success=True,
+                    data={
+                        "package_manager": "pnpm",
+                        "message": f"Dependencies installed successfully for {node_arch}.",
+                        "stdout": result.stdout,
+                    },
+                )
+            else:
+                return ToolResult(
+                    success=False,
+                    error=f"pnpm install failed: {result.stderr}",
+                    data={"stdout": result.stdout, "stderr": result.stderr},
+                )
+
+        except Exception as e:
+            return ToolResult(success=False, error=f"Error installing dependencies: {str(e)}")
+
     def start_server(self, port: int = 3000) -> ToolResult:
         """
         Start the development server in the background.

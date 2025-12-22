@@ -2,6 +2,7 @@
 Sandbox module for managing isolated working directories and executing commands.
 """
 
+import os
 import subprocess
 from pathlib import Path
 from typing import Dict, Optional
@@ -110,6 +111,11 @@ class Sandbox:
         if timeout is None:
             timeout = self.default_timeout
 
+        # Merge custom env with system environment to preserve PATH and other vars
+        full_env = os.environ.copy()
+        if env is not None:
+            full_env.update(env)
+
         try:
             # Execute command
             result = subprocess.run(
@@ -119,7 +125,7 @@ class Sandbox:
                 text=True,
                 timeout=timeout,
                 shell=shell,
-                env=env
+                env=full_env
             )
 
             return SandboxResult(
@@ -220,6 +226,11 @@ class Sandbox:
         # Create cwd if it doesn't exist
         cwd.mkdir(parents=True, exist_ok=True)
 
+        # Merge custom env with system environment to preserve PATH and other vars
+        full_env = os.environ.copy()
+        if env is not None:
+            full_env.update(env)
+
         try:
             # Start process in background using Popen
             process = subprocess.Popen(
@@ -229,7 +240,7 @@ class Sandbox:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                env=env
+                env=full_env
             )
 
             # Store process for later cleanup

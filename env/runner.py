@@ -274,26 +274,126 @@ def run_episode(
     return runner.run_episode(task)
 
 
+def load_prompt_from_csv(csv_path: str, row_index: int = 0) -> str:
+    """
+    Load a prompt from a CSV file.
+
+    Expected CSV format (HuggingFace dataset format):
+    - Should have a 'prompt' column containing the task description
+
+    Args:
+        csv_path: Path to the CSV file
+        row_index: Index of the row to load (default: 0)
+
+    Returns:
+        Prompt string from the specified row
+
+    Raises:
+        FileNotFoundError: If CSV file doesn't exist
+        ValueError: If prompt column not found or row index invalid
+    """
+    import csv
+
+    csv_file = Path(csv_path)
+    if not csv_file.exists():
+        raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+    with open(csv_file, 'r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+
+        if not rows:
+            raise ValueError(f"CSV file is empty: {csv_path}")
+
+        if 'prompt' not in rows[0]:
+            available_cols = ', '.join(rows[0].keys())
+            raise ValueError(
+                f"CSV must have a 'prompt' column. Available columns: {available_cols}"
+            )
+
+        if row_index < 0 or row_index >= len(rows):
+            raise ValueError(
+                f"Row index {row_index} out of range. CSV has {len(rows)} rows (0-{len(rows)-1})"
+            )
+
+        return rows[row_index]['prompt']
+
+
 if __name__ == "__main__":
-    # Example usage
-    import sys
+    import argparse
     from dotenv import load_dotenv
 
     load_dotenv()
 
-    # Get task from command line or use default
-    if len(sys.argv) > 1:
-        task = " ".join(sys.argv[1:])
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="Run an RL-style evaluation episode for LLM agent building web apps"
+    )
+    parser.add_argument(
+        "task",
+        nargs="*",
+        help="Task description/prompt (or use --data to load from CSV)"
+    )
+    parser.add_argument(
+        "--data",
+        type=str,
+        help="Path to CSV file with prompts (expects 'prompt' column)"
+    )
+    parser.add_argument(
+        "--row-index",
+        type=int,
+        default=0,
+        help="Row index to load from CSV (default: 0)"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="gpt-4o-mini",
+        help="LiteLLM model identifier (default: gpt-4o-mini)"
+    )
+    parser.add_argument(
+        "--template",
+        type=str,
+        default="nextjs-starter",
+        help="Template name from templates/ directory (default: nextjs-starter)"
+    )
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=50,
+        help="Maximum agent steps (default: 50)"
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Disable verbose logging"
+    )
+
+    args = parser.parse_args()
+
+    # Determine task source
+    if args.data:
+        # Load from CSV
+        try:
+            task = load_prompt_from_csv(args.data, args.row_index)
+            print(f"Loaded prompt from {args.data} (row {args.row_index})")
+        except Exception as e:
+            print(f"Error loading from CSV: {e}")
+            sys.exit(1)
+    elif args.task:
+        # Use command-line task
+        task = " ".join(args.task)
     else:
+        # Default task
         task = "Create a simple homepage with a welcome message."
 
     # Run episode
     result = run_episode(
         task=task,
-        template_name="nextjs-starter",
-        model_name="gpt-4o-mini",
-        max_steps=30,
-        verbose=True
+        template_name=args.template,
+        model_name=args.model,
+        max_steps=args.max_steps,
+        verbose=not args.quiet
     )
 
     print("\n" + "="*60)

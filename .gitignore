@@ -7,6 +7,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+*.pyc
 
 # Virtual Environments
 .venv
@@ -52,6 +53,8 @@ test_phase1.py
 test_phase1_diff.py
 test_phase2.py
 test_phase3.py
+test_phase4.py
+test_background_processes.py
 
 # TODO
 TODO.md
