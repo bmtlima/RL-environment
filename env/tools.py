@@ -298,6 +298,27 @@ class Tools:
                 error=f"Error listing files in {path}: {str(e)}"
             )
 
+    def finish_task(self, summary: str = "") -> ToolResult:
+        """
+        Signal that the agent has completed the task.
+
+        This is a special tool that doesn't perform any action in the sandbox,
+        but signals to the agent loop that the task is complete.
+
+        Args:
+            summary: Optional summary of what was accomplished
+
+        Returns:
+            ToolResult indicating success
+        """
+        return ToolResult(
+            success=True,
+            data={
+                "summary": summary,
+                "message": "Task marked as complete"
+            }
+        )
+
 
 # Standalone function interface for backward compatibility / simpler usage
 def create_tools(workspace_dir: Union[str, Path]) -> Tools:

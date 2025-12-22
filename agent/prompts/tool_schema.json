@@ -1,0 +1,78 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "write_file",
+      "description": "Write content to a file in the workspace. Creates parent directories if needed. Use this to create or modify files in your project.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to the file (e.g., 'src/index.ts' or 'package.json')"
+          },
+          "content": {
+            "type": "string",
+            "description": "Content to write to the file"
+          }
+        },
+        "required": ["path", "content"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "read_file",
+      "description": "Read the contents of a file from the workspace. Use this to inspect existing files or verify what you've written.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to the file to read (e.g., 'package.json' or 'src/App.tsx')"
+          }
+        },
+        "required": ["path"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "run_command",
+      "description": "Execute a shell command in the workspace. Use this to run build commands, tests, install dependencies, start servers, etc. The command runs with a 5-minute timeout by default.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "Shell command to execute (e.g., 'pnpm install' or 'npm run build')"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Optional working directory relative to workspace (defaults to workspace root)"
+          }
+        },
+        "required": ["command"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "finish_task",
+      "description": "Declare that the task is complete. ONLY call this after you have verified the application works by running builds, tests, and/or starting the server successfully. Include a summary of what was accomplished.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "description": "Brief summary of what was accomplished and how you verified it works"
+          }
+        },
+        "required": ["summary"]
+      }
+    }
+  }
+]
