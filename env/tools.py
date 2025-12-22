@@ -319,6 +319,44 @@ class Tools:
             }
         )
 
+    def start_server(self, port: int = 3000) -> ToolResult:
+        """
+        Start the development server in the background.
+
+        This starts 'pnpm dev' without blocking. The server will continue
+        running until the sandbox is cleaned up.
+
+        Args:
+            port: Port to run the server on (default: 3000)
+
+        Returns:
+            ToolResult with server information
+        """
+        try:
+            # Start server in background
+            result = self.sandbox.run_background("pnpm dev")
+
+            if result.success:
+                return ToolResult(
+                    success=True,
+                    data={
+                        "url": f"http://localhost:{port}",
+                        "message": f"Development server started in background. Access at http://localhost:{port}",
+                        "pid": result.stdout
+                    }
+                )
+            else:
+                return ToolResult(
+                    success=False,
+                    error=f"Failed to start server: {result.error}"
+                )
+
+        except Exception as e:
+            return ToolResult(
+                success=False,
+                error=f"Error starting server: {str(e)}"
+            )
+
 
 # Standalone function interface for backward compatibility / simpler usage
 def create_tools(workspace_dir: Union[str, Path]) -> Tools:

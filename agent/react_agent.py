@@ -61,6 +61,7 @@ class ReActAgent:
             "write_file": self.tools.write_file,
             "read_file": self.tools.read_file,
             "run_command": self.tools.run_command,
+            "start_server": self.tools.start_server,
             "finish_task": self.tools.finish_task,
         }
 

@@ -59,6 +59,7 @@ class Sandbox:
         """
         self.workspace_dir = Path(workspace_dir).resolve()
         self.default_timeout = default_timeout
+        self.background_processes = []  # Track background processes
 
         # Create workspace directory if it doesn't exist
         self.workspace_dir.mkdir(parents=True, exist_ok=True)
@@ -178,10 +179,101 @@ class Sandbox:
         except (ValueError, Exception):
             return False
 
+    def run_background(
+        self,
+        command: str,
+        cwd: Optional[Path] = None,
+        env: Optional[Dict[str, str]] = None
+    ) -> SandboxResult:
+        """
+        Run a command in the background without waiting for it to complete.
+
+        This is useful for long-running processes like development servers.
+        The process will continue running until cleanup() is called.
+
+        Args:
+            command: Command to execute
+            cwd: Working directory (defaults to workspace_dir)
+            env: Environment variables to pass to the command
+
+        Returns:
+            SandboxResult with process information
+        """
+        # Use workspace_dir if cwd is not specified
+        if cwd is None:
+            cwd = self.workspace_dir
+        else:
+            cwd = Path(cwd).resolve()
+
+            # Ensure cwd is within workspace (security check)
+            try:
+                cwd.relative_to(self.workspace_dir)
+            except ValueError:
+                return SandboxResult(
+                    success=False,
+                    stdout="",
+                    stderr="",
+                    exit_code=-1,
+                    error=f"cwd must be within workspace directory: {self.workspace_dir}"
+                )
+
+        # Create cwd if it doesn't exist
+        cwd.mkdir(parents=True, exist_ok=True)
+
+        try:
+            # Start process in background using Popen
+            process = subprocess.Popen(
+                command,
+                cwd=str(cwd),
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=env
+            )
+
+            # Store process for later cleanup
+            self.background_processes.append(process)
+
+            return SandboxResult(
+                success=True,
+                stdout=f"Started background process PID: {process.pid}",
+                stderr="",
+                exit_code=0
+            )
+
+        except Exception as e:
+            return SandboxResult(
+                success=False,
+                stdout="",
+                stderr="",
+                exit_code=-1,
+                error=f"Failed to start background process: {str(e)}"
+            )
+
     def cleanup(self) -> None:
-        """Clean up the sandbox workspace (placeholder for future implementation)."""
-        # For now, we don't auto-delete. This could be extended to:
-        # - Delete workspace directory
-        # - Kill any running processes
-        # - Clean up resources
-        pass
+        """
+        Clean up the sandbox by terminating all background processes.
+
+        This is critical to prevent zombie Node.js servers from running
+        indefinitely after the episode ends.
+        """
+        if not self.background_processes:
+            return
+
+        for process in self.background_processes:
+            try:
+                if process.poll() is None:  # Process is still running
+                    # Try graceful termination first
+                    process.terminate()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        # Force kill if it doesn't terminate gracefully
+                        process.kill()
+                        process.wait()
+            except Exception:
+                # Ignore errors during cleanup
+                pass
+
+        self.background_processes.clear()
