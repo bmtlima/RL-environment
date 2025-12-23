@@ -1,4 +1,7 @@
 #,App Name,App Description,Prompt,Addition for CLI Tools,Rubric
+0,Click Counter,A minimal web page with a button that increments a displayed counter.,"Create a simple web application with a centered button labeled ""Click Me"". Above the button, display a counter that starts at 0. Every time the user clicks the button, the counter should increase by 1. Use React `useState` for state management.",You are working in a Next.js 16 environment with Tailwind CSS. Implement the solution in `app/page.tsx`. Do NOT create an index.html file. Ensure the UI is centered using Tailwind classes.,"1. Page displays a visible counter starting at 0.
+2. Page displays a clickable button.
+3. Clicking the button increments the counter value immediately."
 1,Financial Dashboard,"A web application that provides real-time stock data, live financial news, and an AI-powered chat with web search, including full authentication and database support.
 ","# Task
 Create a fully functional Bloomberg Terminal-style dashboard with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
