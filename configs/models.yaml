@@ -1,14 +1,27 @@
-default: "gpt-4o-mini"
+# Default model to use if --model not specified
+default: "gemini-flash"
 
 models:
+  # OpenAI GPT-4o-mini (fast, cheap, good for most tasks)
+  # Uses: OPENAI_API_KEY
   gpt-4o-mini:
     model_name: "gpt-4o-mini"
     litellm_params:
       model: "gpt-4o-mini"
       temperature: 0.7
 
-  claude-3-5-sonnet:
-    model_name: "claude-3-5-sonnet-20240620"
+  # Anthropic Claude 3.5 Sonnet (best for coding, reasoning)
+  # Uses: ANTHROPIC_API_KEY
+  claude-sonnet:
+    model_name: "claude-sonnet-4-5-20250929"
     litellm_params:
-      model: "anthropic/claude-3-5-sonnet-20240620"
+      model: "anthropic/claude-sonnet-4-5-20250929"
+      temperature: 0.7
+
+  # Google Gemini 2.0 Flash (experimental, fast)
+  # Uses: GOOGLE_API_KEY (or GEMINI_API_KEY)
+  gemini-flash:
+    model_name: "gemini-2.0-flash-001"
+    litellm_params:
+      model: "gemini/gemini-2.0-flash-001"
       temperature: 0.7
