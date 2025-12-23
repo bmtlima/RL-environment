@@ -454,21 +454,3 @@ def your_tool(self, arg: str) -> ToolResult:
   "parameters": {...}
 }
 ```
-
-3. Add to tool map in `agent/react_agent.py`
-
-### Running Tests
-
-```bash
-# Test Phase 1: Environment Tools
-pytest tests/test_phase1.py
-
-# Test Phase 2: LLM Interface
-pytest tests/test_phase2.py
-
-# Test Phase 3: Agent Logic
-pytest tests/test_phase3.py
-
-# Test Phase 4: Workspace Initialization
-pytest tests/test_phase4.py
-```
