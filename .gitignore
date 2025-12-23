@@ -38,6 +38,7 @@ htmlcov/
 # Environment variables
 .env
 .envrc
+configs/env.yaml
 
 # Project-specific
 runs/

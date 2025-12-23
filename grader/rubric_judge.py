@@ -9,11 +9,13 @@ import os
 import json
 from pathlib import Path
 from typing import Dict, List
-from dotenv import load_dotenv
 import litellm
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from configs/env.yaml
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from configs.load_env import load_env
+load_env()
 
 
 class RubricJudge:

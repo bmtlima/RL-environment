@@ -35,11 +35,17 @@ pip install -e .
 This installs the project in editable mode from `pyproject.toml`.
 
 3. **Set up environment variables:**
-Create a `.env` file:
+Copy the example config and add your API keys:
 ```bash
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-GOOGLE_API_KEY=...
+cp configs/env.yaml.example configs/env.yaml
+# Then edit configs/env.yaml and add your actual API keys
+```
+
+Example `configs/env.yaml`:
+```yaml
+openai_api_key: "sk-..."
+anthropic_api_key: "sk-ant-..."
+google_api_key: "..."
 ```
 
 4. **Install Node.js tools:**
@@ -219,9 +225,10 @@ Hybrid evaluation with automated checks + LLM judge:
 RL-environment/
 ├── README.md
 ├── pyproject.toml           # Python dependencies
-├── .env                     # API keys (gitignored)
 │
 ├── configs/
+│   ├── env.yaml             # API keys (gitignored)
+│   ├── env.yaml.example     # API key template
 │   └── models.yaml          # Model configurations
 │
 ├── env/                     # Agent Harness
@@ -416,8 +423,9 @@ python3 env/runner.py --data data/prompts.csv
 
 **4. API key not found**
 ```bash
-# Ensure .env file exists with your keys
-echo "OPENAI_API_KEY=sk-..." > .env
+# Ensure configs/env.yaml exists with your keys
+cp configs/env.yaml.example configs/env.yaml
+# Then edit configs/env.yaml and add your actual API keys
 ```
 
 **5. Agent gets stuck in loop**

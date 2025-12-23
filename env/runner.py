@@ -729,9 +729,9 @@ def run_episode(
 
 if __name__ == "__main__":
     import argparse
-    from dotenv import load_dotenv
+    from configs.load_env import load_env
 
-    load_dotenv()
+    load_env()
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(
