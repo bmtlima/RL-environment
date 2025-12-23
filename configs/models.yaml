@@ -8,15 +8,15 @@ models:
     model_name: "gpt-4o-mini"
     litellm_params:
       model: "gpt-4o-mini"
-      temperature: 0.7
+      temperature: 0.6
 
-  # Anthropic Claude 3.5 Sonnet (best for coding, reasoning)
+  # Anthropic Claude 4.5 Sonnet (best for coding, reasoning)
   # Uses: ANTHROPIC_API_KEY
   claude-sonnet:
     model_name: "claude-sonnet-4-5-20250929"
     litellm_params:
       model: "anthropic/claude-sonnet-4-5-20250929"
-      temperature: 0.7
+      temperature: 0.0
 
   # Google Gemini 2.0 Flash (experimental, fast)
   # Uses: GOOGLE_API_KEY (or GEMINI_API_KEY)
@@ -24,4 +24,4 @@ models:
     model_name: "gemini-2.0-flash-001"
     litellm_params:
       model: "gemini/gemini-2.0-flash-001"
-      temperature: 0.7
+      temperature: 0.2
