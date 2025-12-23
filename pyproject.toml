@@ -2,7 +2,7 @@
 name = "rl-environment"
 version = "0.1.0"
 description = "RL-style evaluation environment for LLM agents building web apps"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = [
     "litellm>=1.0.0",
     "pyyaml>=6.0",
@@ -22,6 +22,9 @@ dev = [
 requires = ["setuptools>=65.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+include = ["agent*", "env*", "grader*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
@@ -30,8 +33,8 @@ python_functions = ["test_*"]
 
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ['py39']
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py39"

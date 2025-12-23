@@ -15,7 +15,7 @@ This environment evaluates LLM agents on their ability to:
 
 ### Prerequisites
 
-- **Python 3.10+**
+- **Python 3.9+**
 - **Node.js 18+** and **pnpm**
 - **API Keys**: OpenAI, Anthropic, or Google AI
 
