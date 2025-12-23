@@ -4,6 +4,12 @@ Test script for the Grader module.
 This script verifies that the Grader can:
 1. Install dependencies in a Next.js workspace
 2. Build the application successfully
+3. Start the production server and verify HTTP 200
+
+Usage:
+    python test_grader.py                    # Test template
+    python test_grader.py path/to/workspace  # Test specific workspace
+    python test_grader.py --all              # Run all checks including server health
 """
 
 import sys
@@ -15,14 +21,14 @@ sys.path.insert(0, str(Path(__file__).parent))
 from grader import Grader
 
 
-def test_grader(workspace_path: str):
+def test_grader_basic(workspace_path: str):
     """
-    Test the grader on a workspace directory.
+    Test install and build only (faster).
 
     Args:
         workspace_path: Path to the workspace to test
     """
-    print(f"Testing Grader on workspace: {workspace_path}\n")
+    print(f"Testing Grader (basic) on workspace: {workspace_path}\n")
 
     # Initialize grader
     try:
@@ -69,13 +75,48 @@ def test_grader(workspace_path: str):
     return install_success and build_success
 
 
+def test_grader_full(workspace_path: str):
+    """
+    Test all checks including server health (slower).
+
+    Args:
+        workspace_path: Path to the workspace to test
+    """
+    print(f"Testing Grader (full) on workspace: {workspace_path}\n")
+
+    # Initialize grader
+    try:
+        grader = Grader(workspace_path)
+        print(f"✓ Grader initialized with workspace: {grader.workspace_dir}\n")
+    except Exception as e:
+        print(f"✗ Failed to initialize grader: {e}")
+        return False
+
+    # Run all checks
+    results = grader.run_all_checks()
+
+    # Return overall pass/fail
+    return results["overall_pass"]
+
+
 if __name__ == "__main__":
     # Default to testing the template
     workspace = "templates/nextjs-starter"
+    run_all = False
 
-    # Allow user to specify workspace via command line
+    # Parse arguments
     if len(sys.argv) > 1:
-        workspace = sys.argv[1]
+        if sys.argv[1] == "--all":
+            run_all = True
+        else:
+            workspace = sys.argv[1]
+            if len(sys.argv) > 2 and sys.argv[2] == "--all":
+                run_all = True
 
-    success = test_grader(workspace)
+    # Run appropriate test
+    if run_all:
+        success = test_grader_full(workspace)
+    else:
+        success = test_grader_basic(workspace)
+
     sys.exit(0 if success else 1)

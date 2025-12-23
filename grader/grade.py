@@ -193,3 +193,206 @@ class Grader:
         except Exception as e:
             print(f"❌ Error during build: {str(e)}")
             return False
+
+    def check_server_health(self, port: int = 3000, timeout: int = 30) -> bool:
+        """
+        Start the production server and verify it responds with HTTP 200.
+
+        This method:
+        1. Starts 'pnpm start' (production server) using Popen
+        2. Waits up to 30 seconds for the server to accept connections
+        3. Sends HTTP GET to http://localhost:3000/
+        4. Verifies response is 200 OK
+        5. ALWAYS kills the server process and children (even on failure)
+
+        Args:
+            port: Port to check (default: 3000)
+            timeout: Max seconds to wait for server (default: 30)
+
+        Returns:
+            True if server started and returned 200, False otherwise
+        """
+        import socket
+        import time
+        import signal
+
+        try:
+            import requests
+        except ImportError:
+            print("❌ requests library not found. Install with: pip install requests")
+            return False
+
+        process = None
+
+        try:
+            print(f"🚀 Starting production server on port {port}...")
+
+            # Start server in background using Popen
+            # preexec_fn=os.setsid creates a new process group for easy cleanup
+            process = subprocess.Popen(
+                "pnpm start",
+                cwd=str(self.workspace_dir),
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                preexec_fn=os.setsid  # Create new process group
+            )
+
+            # Wait for server to be ready (socket check)
+            print(f"⏳ Waiting for server to accept connections (max {timeout}s)...")
+            start_time = time.time()
+            server_ready = False
+
+            while time.time() - start_time < timeout:
+                try:
+                    # Try to connect to the port
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(1)
+                    result = sock.connect_ex(('localhost', port))
+                    sock.close()
+
+                    if result == 0:
+                        server_ready = True
+                        break
+                except Exception:
+                    pass
+
+                # Check if process died
+                if process.poll() is not None:
+                    print("❌ Server process died during startup")
+                    stdout, stderr = process.communicate()
+                    if stdout:
+                        print(f"STDOUT: {stdout}")
+                    if stderr:
+                        print(f"STDERR: {stderr}")
+                    return False
+
+                time.sleep(0.5)
+
+            if not server_ready:
+                print(f"❌ Server did not start within {timeout} seconds")
+                return False
+
+            print("✓ Server is accepting connections")
+
+            # Verify HTTP 200 response
+            print(f"📡 Sending HTTP GET to http://localhost:{port}/...")
+            response = requests.get(f"http://localhost:{port}/", timeout=5)
+
+            if response.status_code == 200:
+                print(f"✅ Server health check passed (HTTP {response.status_code})")
+                return True
+            else:
+                print(f"❌ Server returned HTTP {response.status_code} (expected 200)")
+                return False
+
+        except requests.RequestException as e:
+            print(f"❌ HTTP request failed: {e}")
+            return False
+
+        except Exception as e:
+            print(f"❌ Error during server health check: {e}")
+            return False
+
+        finally:
+            # CRITICAL: Always kill the server process
+            if process is not None:
+                print("🛑 Shutting down server...")
+                try:
+                    # Kill the entire process group to catch child processes
+                    os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+
+                    # Wait for graceful shutdown
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        # Force kill if it doesn't die gracefully
+                        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                        process.wait()
+
+                    print("✓ Server shut down successfully")
+
+                except Exception as e:
+                    print(f"⚠️ Error during cleanup: {e}")
+                    # Last resort: try to kill directly
+                    try:
+                        process.kill()
+                        process.wait()
+                    except Exception:
+                        pass
+
+    def run_all_checks(self) -> dict:
+        """
+        Run all grading checks in sequence.
+
+        Executes:
+        1. run_install() - Install dependencies
+        2. run_build() - Build production bundle
+        3. check_server_health() - Start and verify server (only if build passes)
+
+        Returns:
+            Dictionary with results:
+            {
+                "install": bool,
+                "build": bool,
+                "server_health": bool,
+                "overall_pass": bool
+            }
+        """
+        results = {
+            "install": False,
+            "build": False,
+            "server_health": False,
+            "overall_pass": False
+        }
+
+        print("=" * 60)
+        print("GRADING: Running All Checks")
+        print("=" * 60)
+        print()
+
+        # Check 1: Install
+        print("CHECK 1/3: Installing Dependencies")
+        print("-" * 60)
+        results["install"] = self.run_install()
+        print()
+
+        if not results["install"]:
+            print("❌ Install failed - skipping remaining checks")
+            return results
+
+        # Check 2: Build
+        print("CHECK 2/3: Building Application")
+        print("-" * 60)
+        results["build"] = self.run_build()
+        print()
+
+        if not results["build"]:
+            print("❌ Build failed - skipping server health check")
+            return results
+
+        # Check 3: Server Health
+        print("CHECK 3/3: Server Health Check")
+        print("-" * 60)
+        results["server_health"] = self.check_server_health()
+        print()
+
+        # Overall pass requires all checks to pass
+        results["overall_pass"] = all([
+            results["install"],
+            results["build"],
+            results["server_health"]
+        ])
+
+        # Summary
+        print("=" * 60)
+        print("GRADING SUMMARY")
+        print("=" * 60)
+        print(f"Install:       {'✅ PASS' if results['install'] else '❌ FAIL'}")
+        print(f"Build:         {'✅ PASS' if results['build'] else '❌ FAIL'}")
+        print(f"Server Health: {'✅ PASS' if results['server_health'] else '❌ FAIL'}")
+        print(f"Overall:       {'✅ PASS' if results['overall_pass'] else '❌ FAIL'}")
+        print()
+
+        return results
