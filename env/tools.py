@@ -343,10 +343,10 @@ class Tools:
             # 2. DETECT NODE ARCHITECTURE
             # We ask Node directly what architecture it is running on.
             # This bypasses the Python Rosetta/Intel emulation lies.
-            print("🕵️ Detecting Node.js architecture...")
+            print("Detecting Node.js architecture...")
             arch_check = self.sandbox.execute('node -p "process.arch"')
             node_arch = arch_check.stdout.strip() if arch_check.success else "arm64"
-            print(f"🎯 Target Architecture: {node_arch}")
+            print(f"Target Architecture: {node_arch}")
 
             # 3. PREPARE ENVIRONMENT
             # We force pnpm to install for the NODE architecture, not the Python one.
@@ -361,14 +361,14 @@ class Tools:
             }
 
             # 4. INSTALL (Standard pnpm)
-            print(f"📦 Installing dependencies with pnpm for {node_arch}...")
+            print(f"Installing dependencies with pnpm for {node_arch}...")
             result = self.sandbox.execute(
                 "pnpm install --no-frozen-lockfile", timeout=600, env=install_env
             )
 
             # 5. REBUILD (The Safety Net)
             if result.success:
-                print("🔧 Rebuilding native modules...")
+                print("Rebuilding native modules...")
                 self.sandbox.execute("pnpm rebuild", env=install_env)
 
                 return ToolResult(
