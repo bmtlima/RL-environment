@@ -1,5 +1,5 @@
-,#,App Name,App Description,Prompt,Addition for CLI Tools,Rubric
-0,1,Financial Dashboard,"A web application that provides real-time stock data, live financial news, and an AI-powered chat with web search, including full authentication and database support.
+#,App Name,App Description,Prompt,Addition for CLI Tools,Rubric
+1,Financial Dashboard,"A web application that provides real-time stock data, live financial news, and an AI-powered chat with web search, including full authentication and database support.
 ","# Task
 Create a fully functional Bloomberg Terminal-style dashboard with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
 
@@ -57,7 +57,7 @@ Create a web application that allows users to view real-time stock prices, brows
 23. Application updates public chat messages in real time for all connected users with no manual page reload.
 24. Application maintains a visible, scrollable history of recent public chat messages for users to review.
 "
-1,2,Hospital Dashboard,"A real-time collaborative hospital board that displays units, beds, and patient status, allowing multiple roles (admin, nurse, physician) to update information simultaneously with full authentication and database support.","# Task
+2,Hospital Dashboard,"A real-time collaborative hospital board that displays units, beds, and patient status, allowing multiple roles (admin, nurse, physician) to update information simultaneously with full authentication and database support.","# Task
 Create a multi-user patient tracking board for a hospital with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
 
 ## Functionality Overview
@@ -132,7 +132,7 @@ Create a web application that provides a real-time, shared hospital patient boar
 32. Application ensures each emergency alert remains visible to a user until they explicitly dismiss it.
 33. Application persists active alerts so that users who connect after an alert is created still see all undismissed alerts.
 "
-2,3,Legal Assistant,"A web application that answers legal questions using retrieval-augmented generation over an updatable document knowledge base, with full authentication, file uploads, web search integration, and an AI chat interface.","# Task
+3,Legal Assistant,"A web application that answers legal questions using retrieval-augmented generation over an updatable document knowledge base, with full authentication, file uploads, web search integration, and an AI chat interface.","# Task
 Create an AI legal assistant with RAG over an existing document knowledge base and integrated web search with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
 
 ## Functionality Overview
@@ -185,7 +185,7 @@ Create a web application that allows users to ask legal questions and receive AI
 21. Application passes the content and metadata of all @-referenced documents to the AI assistant as high-priority context during response generation.
 22. Application ensures the AI assistant explicitly cites or references the @-mentioned documents in its response when appropriate, including summarizing or quoting key sections within permissible limits.
 "
-3,4,Pharmacy System,"A multi‑user pharmacy system where patients can browse and order medications while pharmacists manage inventory, process orders, and communicate in real time, with full authentication and database integration.","# Task
+4,Pharmacy System,"A multi‑user pharmacy system where patients can browse and order medications while pharmacists manage inventory, process orders, and communicate in real time, with full authentication and database integration.","# Task
 Create a Pharmacy Management System with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
 
 ## Functionality Overview
@@ -244,7 +244,7 @@ Create a web application that supports two roles—patients and pharmacists. Pat
 24. Application ensures that notification emails are sent reliably and promptly immediately after each order status update is saved in the system.
 25. Application follows basic email best practices for all notifications, including a clear subject line indicating the update and appropriate sender information.
 "
-4,5,Drawing Game,"A multiplayer browser game that helps elementary students learn vocabulary words through drawing and guessing in real time, with support for public rooms and full app functionality.","# Task
+5,Drawing Game,"A multiplayer browser game that helps elementary students learn vocabulary words through drawing and guessing in real time, with support for public rooms and full app functionality.","# Task
 Create a multiplayer vocabulary-drawing game for elementary students with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow-up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
 
 ## Functionality Overview
@@ -299,7 +299,7 @@ Create a fully functional web application modeled after the core mechanics of Sk
 22. Application ensures replays are synchronized for all players who choose to view them simultaneously.
 23. Application persists or caches replay data for at least the duration of the game session so players can rewatch recent rounds.
 "
-5,6,Rental Booking,"A rental marketplace where users can browse, book, and post properties, featuring media uploads, secure authentication, full database integration, and optional end‑to‑end payments.","# Task
+6,Rental Booking,"A rental marketplace where users can browse, book, and post properties, featuring media uploads, secure authentication, full database integration, and optional end‑to‑end payments.","# Task
 Create a rental booking application with an Airbnb-style layout with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow-up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
 
 ## Functionality Overview

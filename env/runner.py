@@ -3,8 +3,10 @@ Episode runner for the RL-style evaluation environment.
 
 This module orchestrates the complete lifecycle:
 1. Initialize workspace from template
-2. Run agent on task
-3. Collect results and logs
+2. Run agent on task (with mock mode for isolated environments)
+3. Run automated grading checks
+4. Run LLM judge evaluation
+5. Save results and print summary
 """
 
 import sys
@@ -20,19 +22,23 @@ import shutil
 from datetime import datetime
 from typing import Dict, Optional, Any
 import json
+import yaml
 
 from env.sandbox import Sandbox
 from agent.react_agent import ReActAgent
+from grader.grade import Grader
+from grader.rubric_judge import RubricJudge
 
 
 class EpisodeRunner:
     """
-    Manages a complete episode: workspace setup, agent execution, and cleanup.
+    Manages a complete episode: workspace setup, agent execution, and grading.
 
     Workflow:
     1. Init: Create timestamped workspace from template
-    2. Agent Loop: Run agent on task
-    3. Grading: (Future) Run automated checks and rubric judge
+    2. Agent Loop: Run agent on task with mock mode
+    3. Grading: Run automated checks (install, build, server health)
+    4. Judge: Run LLM-based code evaluation
     """
 
     def __init__(
@@ -47,7 +53,7 @@ class EpisodeRunner:
 
         Args:
             template_name: Name of template in templates/ directory
-            model_name: LiteLLM model identifier
+            model_name: Model identifier from configs/models.yaml
             max_steps: Maximum agent steps
             verbose: Whether to print verbose logs
         """
@@ -74,6 +80,52 @@ class EpisodeRunner:
         """Log a message if verbose mode is enabled."""
         if self.verbose:
             print(f"{prefix} {message}")
+
+    def _construct_mock_mode_prompt(
+        self,
+        prompt: str,
+        addition_for_cli_tools: str = ""
+    ) -> str:
+        """
+        Construct the final prompt with mock mode instructions.
+
+        Combines:
+        1. Product Requirements (from dataset 'Prompt' column)
+        2. Technical Constraints (from 'Addition for CLI Tools' column)
+        3. System Override (mock mode for isolated environment)
+
+        Args:
+            prompt: Main product requirements
+            addition_for_cli_tools: Technical constraints (e.g., "Use Supabase")
+
+        Returns:
+            Complete prompt with mock mode instructions
+        """
+        mock_mode_override = """
+
+--- SYSTEM OVERRIDE: ISOLATED ENVIRONMENT MODE ---
+You are running in a restricted demonstration environment with NO access to external APIs, Cloud Databases (Supabase), or Payment Gateways.
+
+1. IGNORE requirements to use Supabase, Firebase, or external databases.
+   - Instead, implement a **Local Mock Database**. Use a local JSON file (e.g., `data.json`) or browser `localStorage` to persist data.
+   - For Authentication: Create a simple mock auth system (e.g., accept any email/password, store user in Context/Session).
+
+2. IGNORE requirements for External APIs (Stock Data, Search, OpenAI, Stripe).
+   - Instead, implement **Mock Services**.
+   - Example: For stock prices, write a function that generates random fluctuating numbers.
+   - Example: For payments, create a form that always returns "Success" after a 2-second delay.
+
+Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulated data and services."""
+
+        # Combine all parts
+        full_prompt = prompt
+
+        if addition_for_cli_tools and addition_for_cli_tools.strip():
+            full_prompt += f"\n\n--- TECHNICAL CONSTRAINTS ---\n{addition_for_cli_tools}"
+
+        full_prompt += mock_mode_override
+
+        return full_prompt
 
     def init_workspace(self) -> Path:
         """
@@ -142,29 +194,38 @@ class EpisodeRunner:
 
         return self.workspace_dir
 
-    def run_episode(self, task: str) -> Dict[str, Any]:
+    def run_episode(
+        self,
+        task: str,
+        rubric: Optional[str] = None,
+        app_name: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
-        Run a complete episode: workspace init + agent execution.
+        Run a complete episode: workspace init + agent execution + grading.
 
         Args:
-            task: Task description/prompt for the agent
+            task: Task description/prompt for the agent (already includes mock mode)
+            rubric: Grading rubric (if None, uses default)
+            app_name: Application name (for metadata)
 
         Returns:
             Dictionary with episode results
         """
         self._log("="*60, prefix="")
         self._log("STARTING EPISODE", prefix="🚀")
+        if app_name:
+            self._log(f"App: {app_name}", prefix="  ")
         self._log("="*60, prefix="")
 
         # Step 1: Initialize workspace
-        self._log("\n[1/2] Initializing Workspace", prefix="📋")
+        self._log("\n[1/4] Initializing Workspace", prefix="📋")
         workspace = self.init_workspace()
 
         # Step 2: Run agent
-        self._log("\n[2/2] Running Agent", prefix="🤖")
+        self._log("\n[2/4] Running Agent", prefix="🤖")
         self._log(f"Model: {self.model_name}", prefix="  ")
         self._log(f"Max steps: {self.max_steps}", prefix="  ")
-        self._log(f"Task: {task}", prefix="  ")
+        self._log(f"Task: {task[:100]}...", prefix="  ")
 
         # Initialize sandbox and agent
         self.sandbox = Sandbox(workspace)
@@ -179,6 +240,36 @@ class EpisodeRunner:
             # Run agent
             agent_result = self.agent.run(task)
 
+            # Step 3: Run Grading
+            self._log("\n[3/4] Running Automated Checks", prefix="📊")
+            grader = Grader(str(self.workspace_dir))
+            grader_results = grader.run_all_checks()
+
+            # Step 4: Run LLM Judge
+            self._log("\n[4/4] Running LLM Judge", prefix="⚖️")
+            judge = RubricJudge(model=self.model_name)
+
+            # Use provided rubric or default
+            if rubric is None:
+                rubric = self._get_default_rubric()
+
+            judge_results = judge.evaluate(
+                workspace_path=str(self.workspace_dir),
+                prompt=task,
+                rubric=rubric
+            )
+
+            # Combine all results
+            grade_result = {
+                "automated_checks": grader_results,
+                "llm_evaluation": judge_results,
+                "overall_score": judge_results.get("score", 0),
+                "overall_pass": grader_results.get("overall_pass", False) and judge_results.get("score", 0) >= 60
+            }
+
+            # Save grade result
+            self._save_grade_result(grade_result)
+
             # Prepare episode result
             episode_result = {
                 "episode_dir": str(self.episode_dir),
@@ -186,18 +277,18 @@ class EpisodeRunner:
                 "logs_dir": str(self.logs_dir),
                 "template": self.template_name,
                 "model": self.model_name,
+                "app_name": app_name,
                 "task": task,
                 "agent_result": agent_result,
+                "grade_result": grade_result,
                 "timestamp": self.episode_dir.name
             }
 
             # Save episode result
             self._save_episode_result(episode_result)
 
-            self._log("\n" + "="*60, prefix="")
-            self._log("EPISODE COMPLETE", prefix="✅")
-            self._log("="*60, prefix="")
-            self._log(f"Results saved to: {self.episode_dir}", prefix="  ")
+            # Print final summary
+            self._print_final_summary(agent_result, grade_result, app_name)
 
             return episode_result
 
@@ -208,6 +299,43 @@ class EpisodeRunner:
                 self._log("\nCleaning up background processes...", prefix="🧹")
                 self.sandbox.cleanup()
                 self._log("✓ Cleanup complete", prefix="  ")
+
+    def _get_default_rubric(self) -> str:
+        """
+        Get the default grading rubric for evaluating agent work.
+
+        Returns:
+            Rubric string with evaluation criteria
+        """
+        return """Evaluate the Next.js application on the following criteria:
+
+1. Functionality (40 points)
+   - All required features are implemented
+   - Features work correctly without errors
+   - State management is correct
+   - User interactions behave as expected
+
+2. Code Quality (30 points)
+   - Clean, readable, and well-organized code
+   - Proper TypeScript types (no 'any' unless necessary)
+   - Good component structure and separation of concerns
+   - No unnecessary complexity or code duplication
+   - Follows React and Next.js best practices
+
+3. UI/UX (20 points)
+   - Clean, modern, and professional design
+   - Good use of Tailwind CSS
+   - Responsive layout works on different screen sizes
+   - Accessible (proper semantic HTML, ARIA labels where needed)
+   - Good visual hierarchy and spacing
+
+4. Production Readiness (10 points)
+   - No console errors or warnings
+   - Code is production-ready
+   - Handles edge cases gracefully
+   - Performance considerations (e.g., no unnecessary re-renders)
+
+Provide a breakdown of scores for each criterion and an overall score (0-100)."""
 
     def _save_episode_result(self, result: Dict[str, Any]) -> None:
         """Save episode result to JSON file."""
@@ -223,6 +351,84 @@ class EpisodeRunner:
             json.dump(serializable_result, f, indent=2)
 
         self._log(f"✓ Result saved to: {result_file}", prefix="  ")
+
+    def _save_grade_result(self, grade_result: Dict[str, Any]) -> None:
+        """Save grading result to grade.json file."""
+        grade_file = self.episode_dir / "grade.json"
+
+        with open(grade_file, 'w') as f:
+            json.dump(grade_result, f, indent=2)
+
+        self._log(f"✓ Grade saved to: {grade_file}", prefix="  ")
+
+    def _print_final_summary(
+        self,
+        agent_result: Dict[str, Any],
+        grade_result: Dict[str, Any],
+        app_name: Optional[str] = None
+    ) -> None:
+        """Print a nice summary table of the episode results."""
+        print("\n" + "="*70)
+        print(" "*25 + "EPISODE SUMMARY")
+        print("="*70)
+
+        if app_name:
+            print(f"\n📱 APP: {app_name}")
+            print("-" * 70)
+
+        # Agent section
+        print("\n📋 AGENT PERFORMANCE")
+        print("-" * 70)
+        agent_status = "✅ SUCCESS" if agent_result.get("success") else "❌ FAILED"
+        print(f"  Status:       {agent_status}")
+        print(f"  Steps:        {agent_result.get('steps', 0)}/{self.max_steps}")
+        print(f"  Model:        {self.model_name}")
+
+        # Automated checks section
+        print("\n🔧 AUTOMATED CHECKS")
+        print("-" * 70)
+        checks = grade_result.get("automated_checks", {})
+        install_status = "✅ PASS" if checks.get("install") else "❌ FAIL"
+        build_status = "✅ PASS" if checks.get("build") else "❌ FAIL"
+        server_status = "✅ PASS" if checks.get("server_health") else "❌ FAIL"
+        print(f"  Install:      {install_status}")
+        print(f"  Build:        {build_status}")
+        print(f"  Server:       {server_status}")
+
+        # LLM evaluation section
+        print("\n⚖️  LLM EVALUATION")
+        print("-" * 70)
+        llm_eval = grade_result.get("llm_evaluation", {})
+        score = llm_eval.get("score", 0)
+        print(f"  Score:        {score}/100")
+
+        # Show breakdown if available
+        breakdown = llm_eval.get("breakdown", {})
+        if breakdown:
+            print(f"  Breakdown:")
+            for criterion, criterion_score in breakdown.items():
+                print(f"    - {criterion}: {criterion_score}")
+
+        # Overall result
+        print("\n🏆 OVERALL RESULT")
+        print("-" * 70)
+        overall_pass = grade_result.get("overall_pass", False)
+        overall_status = "✅ PASS" if overall_pass else "❌ FAIL"
+        print(f"  Status:       {overall_status}")
+        print(f"  Final Score:  {score}/100")
+
+        # Cost (if available in agent_result)
+        if "total_cost" in agent_result:
+            print(f"  Total Cost:   ${agent_result['total_cost']:.4f}")
+
+        print("\n📂 OUTPUT")
+        print("-" * 70)
+        print(f"  Episode:      {self.episode_dir}")
+        print(f"  Workspace:    {self.workspace_dir}")
+        print(f"  Results:      {self.episode_dir}/result.json")
+        print(f"  Grade:        {self.episode_dir}/grade.json")
+
+        print("\n" + "="*70 + "\n")
 
     def get_workspace_path(self) -> Optional[Path]:
         """Get the current workspace path."""
@@ -245,52 +451,52 @@ class EpisodeRunner:
             self._log("✓ Episode directory deleted", prefix="  ")
 
 
-def run_episode(
-    task: str,
-    template_name: str = "nextjs-starter",
-    model_name: str = "gpt-4o-mini",
-    max_steps: int = 50,
-    verbose: bool = True
-) -> Dict[str, Any]:
+def load_models_config() -> Dict[str, Any]:
     """
-    Convenience function to run a single episode.
-
-    Args:
-        task: Task description/prompt
-        template_name: Template to use
-        model_name: LiteLLM model identifier
-        max_steps: Maximum agent steps
-        verbose: Whether to print logs
+    Load model configurations from configs/models.yaml.
 
     Returns:
-        Episode result dictionary
+        Dictionary with model configurations
     """
-    runner = EpisodeRunner(
-        template_name=template_name,
-        model_name=model_name,
-        max_steps=max_steps,
-        verbose=verbose
-    )
-    return runner.run_episode(task)
+    config_path = Path(__file__).parent.parent / "configs" / "models.yaml"
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Models config not found: {config_path}")
+
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+
+    return config
 
 
-def load_prompt_from_csv(csv_path: str, row_index: int = 0) -> str:
+def load_task_from_csv(csv_path: str, row_index: int = 0) -> Dict[str, str]:
     """
-    Load a prompt from a CSV file.
+    Load a task from the HuggingFace dataset CSV.
 
-    Expected CSV format (HuggingFace dataset format):
-    - Should have a 'prompt' column containing the task description
+    Expected CSV format with columns:
+    - App Name: Name of the application
+    - App Description: Brief description
+    - Prompt: Main product requirements
+    - Addition for CLI Tools: Technical constraints (e.g., "Use Supabase")
+    - Rubric: Grading criteria
 
     Args:
         csv_path: Path to the CSV file
         row_index: Index of the row to load (default: 0)
 
     Returns:
-        Prompt string from the specified row
+        Dictionary with task data:
+        {
+            "app_name": str,
+            "app_description": str,
+            "prompt": str,
+            "addition_for_cli_tools": str,
+            "rubric": str
+        }
 
     Raises:
         FileNotFoundError: If CSV file doesn't exist
-        ValueError: If prompt column not found or row index invalid
+        ValueError: If required columns not found or row index invalid
     """
     import csv
 
@@ -305,10 +511,14 @@ def load_prompt_from_csv(csv_path: str, row_index: int = 0) -> str:
         if not rows:
             raise ValueError(f"CSV file is empty: {csv_path}")
 
-        if 'prompt' not in rows[0]:
+        # Check for required columns
+        required_cols = ['App Name', 'Prompt', 'Rubric']
+        missing_cols = [col for col in required_cols if col not in rows[0]]
+        if missing_cols:
             available_cols = ', '.join(rows[0].keys())
             raise ValueError(
-                f"CSV must have a 'prompt' column. Available columns: {available_cols}"
+                f"CSV missing required columns: {missing_cols}\n"
+                f"Available columns: {available_cols}"
             )
 
         if row_index < 0 or row_index >= len(rows):
@@ -316,7 +526,48 @@ def load_prompt_from_csv(csv_path: str, row_index: int = 0) -> str:
                 f"Row index {row_index} out of range. CSV has {len(rows)} rows (0-{len(rows)-1})"
             )
 
-        return rows[row_index]['prompt']
+        row = rows[row_index]
+
+        return {
+            "app_name": row.get('App Name', ''),
+            "app_description": row.get('App Description', ''),
+            "prompt": row.get('Prompt', ''),
+            "addition_for_cli_tools": row.get('Addition for CLI Tools', ''),
+            "rubric": row.get('Rubric', '')
+        }
+
+
+def run_episode(
+    task: str,
+    template_name: str = "nextjs-starter",
+    model_name: str = "gpt-4o-mini",
+    max_steps: int = 50,
+    verbose: bool = True,
+    rubric: Optional[str] = None,
+    app_name: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Convenience function to run a single episode.
+
+    Args:
+        task: Task description/prompt (with mock mode instructions)
+        template_name: Template to use
+        model_name: Model identifier
+        max_steps: Maximum agent steps
+        verbose: Whether to print logs
+        rubric: Grading rubric (optional)
+        app_name: Application name (optional)
+
+    Returns:
+        Episode result dictionary
+    """
+    runner = EpisodeRunner(
+        template_name=template_name,
+        model_name=model_name,
+        max_steps=max_steps,
+        verbose=verbose
+    )
+    return runner.run_episode(task=task, rubric=rubric, app_name=app_name)
 
 
 if __name__ == "__main__":
@@ -337,7 +588,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data",
         type=str,
-        help="Path to CSV file with prompts (expects 'prompt' column)"
+        help="Path to CSV file with HuggingFace dataset format"
     )
     parser.add_argument(
         "--row-index",
@@ -349,7 +600,7 @@ if __name__ == "__main__":
         "--model",
         type=str,
         default="gpt-4o-mini",
-        help="LiteLLM model identifier (default: gpt-4o-mini)"
+        help="Model identifier from configs/models.yaml (default: gpt-4o-mini)"
     )
     parser.add_argument(
         "--template",
@@ -371,34 +622,66 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # Load models config
+    try:
+        models_config = load_models_config()
+        print(f"✓ Loaded models config (default: {models_config.get('default', 'gpt-4o-mini')})")
+    except Exception as e:
+        print(f"Warning: Could not load models config: {e}")
+        models_config = {"default": "gpt-4o-mini"}
+
     # Determine task source
     if args.data:
-        # Load from CSV
+        # Load from HuggingFace dataset CSV
         try:
-            task = load_prompt_from_csv(args.data, args.row_index)
-            print(f"Loaded prompt from {args.data} (row {args.row_index})")
+            task_data = load_task_from_csv(args.data, args.row_index)
+            print(f"✓ Loaded task from {args.data} (row {args.row_index})")
+            print(f"  App: {task_data['app_name']}")
+
+            # Create runner instance to access mock mode prompt builder
+            runner = EpisodeRunner(
+                template_name=args.template,
+                model_name=args.model,
+                max_steps=args.max_steps,
+                verbose=not args.quiet
+            )
+
+            # Construct mock mode prompt
+            full_task = runner._construct_mock_mode_prompt(
+                prompt=task_data['prompt'],
+                addition_for_cli_tools=task_data['addition_for_cli_tools']
+            )
+
+            # Run episode
+            result = runner.run_episode(
+                task=full_task,
+                rubric=task_data['rubric'],
+                app_name=task_data['app_name']
+            )
+
         except Exception as e:
             print(f"Error loading from CSV: {e}")
             sys.exit(1)
     elif args.task:
         # Use command-line task
         task = " ".join(args.task)
+        result = run_episode(
+            task=task,
+            template_name=args.template,
+            model_name=args.model,
+            max_steps=args.max_steps,
+            verbose=not args.quiet
+        )
     else:
         # Default task
         task = "Create a simple homepage with a welcome message."
+        result = run_episode(
+            task=task,
+            template_name=args.template,
+            model_name=args.model,
+            max_steps=args.max_steps,
+            verbose=not args.quiet
+        )
 
-    # Run episode
-    result = run_episode(
-        task=task,
-        template_name=args.template,
-        model_name=args.model,
-        max_steps=args.max_steps,
-        verbose=not args.quiet
-    )
-
-    print("\n" + "="*60)
-    print("EPISODE SUMMARY")
-    print("="*60)
-    print(f"Success: {result['agent_result']['success']}")
-    print(f"Steps: {result['agent_result']['steps']}")
-    print(f"Workspace: {result['workspace_dir']}")
+    print("\n✅ Episode completed successfully!")
+    print(f"   Results saved to: {result['episode_dir']}")
