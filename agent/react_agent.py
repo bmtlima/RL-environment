@@ -32,7 +32,9 @@ class ReActAgent:
         sandbox: Sandbox,
         model_name: str = "gpt-4o-mini",
         max_steps: int = 50,
-        verbose: bool = True
+        verbose: bool = True,
+        agent_log_path: Optional[Path] = None,
+        system_log_path: Optional[Path] = None
     ):
         """
         Initialize the ReAct agent.
@@ -42,14 +44,20 @@ class ReActAgent:
             model_name: LiteLLM model identifier
             max_steps: Maximum number of steps before stopping
             verbose: Whether to print agent actions
+            agent_log_path: Path to agent.log for tool call logging
+            system_log_path: Path to system.log for command output logging
         """
         self.sandbox = sandbox
         self.model_name = model_name
         self.max_steps = max_steps
         self.verbose = verbose
 
-        # Initialize tools
-        self.tools = Tools(sandbox)
+        # Initialize tools with log paths
+        self.tools = Tools(
+            sandbox,
+            agent_log_path=agent_log_path,
+            system_log_path=system_log_path
+        )
 
         # Load prompts and schemas
         prompts_dir = Path(__file__).parent / "prompts"

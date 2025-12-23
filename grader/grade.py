@@ -12,6 +12,7 @@ import subprocess
 import shutil
 from pathlib import Path
 from typing import Dict, Optional, Tuple
+from datetime import datetime
 
 
 class Grader:
@@ -22,17 +23,27 @@ class Grader:
     to verify it compiles without errors.
     """
 
-    def __init__(self, workspace_dir: str):
+    def __init__(self, workspace_dir: str, grader_log_path: Optional[Path] = None):
         """
         Initialize the grader with a workspace directory.
 
         Args:
             workspace_dir: Path to the workspace directory containing the Next.js app
+            grader_log_path: Path to grader.log for grading phase logging
         """
         self.workspace_dir = Path(workspace_dir).resolve()
+        self.grader_log_path = grader_log_path
 
         if not self.workspace_dir.exists():
             raise ValueError(f"Workspace directory does not exist: {workspace_dir}")
+
+    def _log_grader(self, check_name: str, status: str, message: str):
+        """Log grading phase output to grader.log."""
+        if self.grader_log_path:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_line = f"[{timestamp}] [{check_name}] {status}: {message}\n"
+            with open(self.grader_log_path, 'a') as f:
+                f.write(log_line)
 
     def _execute(
         self,
@@ -97,6 +108,9 @@ class Grader:
             True if installation succeeded, False otherwise
         """
         try:
+            # Log start of install check
+            self._log_grader("INSTALL", "START", "Beginning dependency installation")
+
             # 1. CLEANUP: Delete node_modules for clean install
             print("Cleaning up old dependencies...")
             items_to_delete = ["pnpm-lock.yaml", "package-lock.json", "node_modules"]
@@ -141,9 +155,11 @@ class Grader:
             if not success:
                 print(f"❌ Install failed with exit code {exit_code}")
                 print(f"STDERR: {stderr}")
+                self._log_grader("INSTALL", "FAIL", f"pnpm install failed (exit {exit_code}): {stderr[:200]}")
                 return False
 
             print(stdout)
+            self._log_grader("INSTALL", "SUCCESS", f"pnpm install completed for {node_arch}")
 
             # 5. REBUILD (The Safety Net)
             print("🔧 Rebuilding native modules...")
@@ -153,11 +169,16 @@ class Grader:
                 timeout=300
             )
 
+            if success:
+                self._log_grader("INSTALL", "SUCCESS", "pnpm rebuild completed")
+
             print("✅ Dependencies installed successfully")
+            self._log_grader("INSTALL", "PASS", "All dependencies installed successfully")
             return True
 
         except Exception as e:
             print(f"❌ Error during installation: {str(e)}")
+            self._log_grader("INSTALL", "ERROR", f"Exception during install: {str(e)}")
             return False
 
     def run_build(self) -> bool:
@@ -171,6 +192,8 @@ class Grader:
             True if build succeeded (exit code 0), False otherwise
         """
         try:
+            self._log_grader("BUILD", "START", "Beginning application build")
+
             print("🏗️ Building application...")
             success, stdout, stderr, exit_code = self._execute(
                 "pnpm build",
@@ -185,13 +208,16 @@ class Grader:
                 print(f"❌ Build failed with exit code {exit_code}")
                 if stderr:
                     print(f"STDERR: {stderr}")
+                self._log_grader("BUILD", "FAIL", f"Build failed (exit {exit_code}): {stderr[:200]}")
                 return False
 
             print("✅ Build succeeded")
+            self._log_grader("BUILD", "PASS", "Build completed successfully")
             return True
 
         except Exception as e:
             print(f"❌ Error during build: {str(e)}")
+            self._log_grader("BUILD", "ERROR", f"Exception during build: {str(e)}")
             return False
 
     def check_server_health(self, port: int = 3000, timeout: int = 30) -> bool:
@@ -225,6 +251,8 @@ class Grader:
         process = None
 
         try:
+            self._log_grader("SERVER", "START", f"Starting production server health check on port {port}")
+
             print(f"🚀 Starting production server on port {port}...")
 
             # Start server in background using Popen
@@ -266,15 +294,18 @@ class Grader:
                         print(f"STDOUT: {stdout}")
                     if stderr:
                         print(f"STDERR: {stderr}")
+                    self._log_grader("SERVER", "FAIL", "Server process died during startup")
                     return False
 
                 time.sleep(0.5)
 
             if not server_ready:
                 print(f"❌ Server did not start within {timeout} seconds")
+                self._log_grader("SERVER", "FAIL", f"Server did not start within {timeout}s")
                 return False
 
             print("✓ Server is accepting connections")
+            self._log_grader("SERVER", "INFO", "Server is accepting connections on socket")
 
             # Verify HTTP 200 response
             print(f"📡 Sending HTTP GET to http://localhost:{port}/...")
@@ -282,17 +313,21 @@ class Grader:
 
             if response.status_code == 200:
                 print(f"✅ Server health check passed (HTTP {response.status_code})")
+                self._log_grader("SERVER", "PASS", f"Server responded with HTTP {response.status_code}")
                 return True
             else:
                 print(f"❌ Server returned HTTP {response.status_code} (expected 200)")
+                self._log_grader("SERVER", "FAIL", f"Server returned HTTP {response.status_code} (expected 200)")
                 return False
 
         except requests.RequestException as e:
             print(f"❌ HTTP request failed: {e}")
+            self._log_grader("SERVER", "FAIL", f"HTTP request failed: {str(e)}")
             return False
 
         except Exception as e:
             print(f"❌ Error during server health check: {e}")
+            self._log_grader("SERVER", "ERROR", f"Exception during health check: {str(e)}")
             return False
 
         finally:

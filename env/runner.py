@@ -71,6 +71,9 @@ class EpisodeRunner:
         self.episode_dir: Optional[Path] = None
         self.workspace_dir: Optional[Path] = None
         self.logs_dir: Optional[Path] = None
+        self.agent_log_path: Optional[Path] = None
+        self.system_log_path: Optional[Path] = None
+        self.grader_log_path: Optional[Path] = None
 
         # Components (initialized during run)
         self.sandbox: Optional[Sandbox] = None
@@ -169,6 +172,11 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
         self.episode_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir.mkdir(parents=True, exist_ok=True)
 
+        # Create log file paths
+        self.agent_log_path = self.logs_dir / "agent.log"
+        self.system_log_path = self.logs_dir / "system.log"
+        self.grader_log_path = self.logs_dir / "grader.log"
+
         self._log(f"Initializing workspace from template: {self.template_name}", prefix="📁")
         self._log(f"Episode directory: {self.episode_dir}", prefix="  ")
 
@@ -233,7 +241,9 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
             sandbox=self.sandbox,
             model_name=self.model_name,
             max_steps=self.max_steps,
-            verbose=self.verbose
+            verbose=self.verbose,
+            agent_log_path=self.agent_log_path,
+            system_log_path=self.system_log_path
         )
 
         try:
@@ -242,7 +252,10 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
 
             # Step 3: Run Grading
             self._log("\n[3/4] Running Automated Checks", prefix="📊")
-            grader = Grader(str(self.workspace_dir))
+            grader = Grader(
+                str(self.workspace_dir),
+                grader_log_path=self.grader_log_path
+            )
             grader_results = grader.run_all_checks()
 
             # Step 4: Run LLM Judge
@@ -269,6 +282,9 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
 
             # Save grade result
             self._save_grade_result(grade_result)
+
+            # Generate human-readable report
+            self._generate_report_md(agent_result, grade_result, app_name, task)
 
             # Prepare episode result
             episode_result = {
@@ -360,6 +376,147 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
             json.dump(grade_result, f, indent=2)
 
         self._log(f"✓ Grade saved to: {grade_file}", prefix="  ")
+
+    def _generate_report_md(
+        self,
+        agent_result: Dict[str, Any],
+        grade_result: Dict[str, Any],
+        app_name: Optional[str],
+        task: str
+    ) -> None:
+        """Generate a human-readable markdown report."""
+        report_file = self.episode_dir / "report.md"
+
+        # Build report content
+        report_lines = [
+            f"# Episode Report: {app_name or 'Application'}",
+            "",
+            f"**Timestamp:** {self.episode_dir.name}",
+            f"**Model:** {self.model_name}",
+            f"**Template:** {self.template_name}",
+            "",
+            "---",
+            "",
+            "## Task Description",
+            "",
+            task,
+            "",
+            "---",
+            "",
+            "## Agent Performance",
+            "",
+            f"- **Status:** {'✅ Success' if agent_result.get('success') else '❌ Failed'}",
+            f"- **Steps Taken:** {agent_result.get('steps', 0)}/{self.max_steps}",
+            f"- **Model:** {self.model_name}",
+            "",
+        ]
+
+        # Add agent action summary if available
+        if agent_result.get("actions"):
+            report_lines.extend([
+                "### Agent Actions",
+                "",
+                "| Step | Tool | Description |",
+                "|------|------|-------------|"
+            ])
+            for idx, action in enumerate(agent_result.get("actions", [])[:20], 1):  # Limit to first 20
+                tool_name = action.get("tool", "unknown")
+                # Extract brief description from tool args
+                args = action.get("args", {})
+                if tool_name == "write_file":
+                    desc = f"Write {args.get('path', 'file')}"
+                elif tool_name == "read_file":
+                    desc = f"Read {args.get('path', 'file')}"
+                elif tool_name == "run_command":
+                    desc = f"Run: {args.get('command', 'cmd')[:50]}"
+                elif tool_name == "install_deps":
+                    desc = "Install dependencies"
+                elif tool_name == "start_server":
+                    desc = "Start dev server"
+                elif tool_name == "finish_task":
+                    desc = "Complete task"
+                else:
+                    desc = str(args)[:50]
+                report_lines.append(f"| {idx} | `{tool_name}` | {desc} |")
+            report_lines.extend(["", ""])
+
+        # Automated checks section
+        checks = grade_result.get("automated_checks", {})
+        report_lines.extend([
+            "## Automated Checks",
+            "",
+            f"- **Install:** {'✅ Pass' if checks.get('install') else '❌ Fail'}",
+            f"- **Build:** {'✅ Pass' if checks.get('build') else '❌ Fail'}",
+            f"- **Server Health:** {'✅ Pass' if checks.get('server_health') else '❌ Fail'}",
+            f"- **Overall:** {'✅ Pass' if checks.get('overall_pass') else '❌ Fail'}",
+            "",
+        ])
+
+        # LLM evaluation section
+        llm_eval = grade_result.get("llm_evaluation", {})
+        report_lines.extend([
+            "## LLM Judge Evaluation",
+            "",
+            f"**Overall Score:** {llm_eval.get('score', 0)}/100",
+            "",
+        ])
+
+        # Add breakdown if available
+        breakdown = llm_eval.get("breakdown", {})
+        if breakdown:
+            report_lines.extend([
+                "### Criteria Breakdown",
+                ""
+            ])
+            for criterion, score in breakdown.items():
+                report_lines.append(f"- **{criterion}:** {score}/100")
+            report_lines.append("")
+
+        # Add reasoning if available
+        if llm_eval.get("reasoning"):
+            report_lines.extend([
+                "### Judge Reasoning",
+                "",
+                llm_eval.get("reasoning"),
+                "",
+            ])
+
+        # Overall result
+        overall_pass = grade_result.get("overall_pass", False)
+        overall_score = grade_result.get("overall_score", 0)
+        report_lines.extend([
+            "---",
+            "",
+            "## Final Result",
+            "",
+            f"- **Status:** {'✅ PASS' if overall_pass else '❌ FAIL'}",
+            f"- **Final Score:** {overall_score}/100",
+            "",
+        ])
+
+        # Links to files
+        report_lines.extend([
+            "---",
+            "",
+            "## Files",
+            "",
+            f"- **Workspace:** `{self.workspace_dir.relative_to(self.project_root)}`",
+            f"- **Logs:** `{self.logs_dir.relative_to(self.project_root)}`",
+            f"  - Agent Log: `logs/agent.log`",
+            f"  - System Log: `logs/system.log`",
+            f"  - Grader Log: `logs/grader.log`",
+            f"- **Results:**",
+            f"  - Episode Result: `result.json`",
+            f"  - Grade Result: `grade.json`",
+            "",
+        ])
+
+        # Write report
+        report_content = "\n".join(report_lines)
+        with open(report_file, 'w') as f:
+            f.write(report_content)
+
+        self._log(f"✓ Report saved to: {report_file}", prefix="  ")
 
     def _print_final_summary(
         self,
@@ -599,8 +756,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        default="gpt-4o-mini",
-        help="Model identifier from configs/models.yaml (default: gpt-4o-mini)"
+        default=None,
+        help="Model identifier from configs/models.yaml (e.g., gemini-flash, claude-sonnet, gpt-4o-mini)"
     )
     parser.add_argument(
         "--template",
@@ -625,10 +782,25 @@ if __name__ == "__main__":
     # Load models config
     try:
         models_config = load_models_config()
-        print(f"✓ Loaded models config (default: {models_config.get('default', 'gpt-4o-mini')})")
+        default_model_key = models_config.get('default', 'gemini-flash')
+        print(f"✓ Loaded models config (default: {default_model_key})")
     except Exception as e:
-        print(f"Warning: Could not load models config: {e}")
-        models_config = {"default": "gpt-4o-mini"}
+        print(f"Error: Could not load models config: {e}")
+        sys.exit(1)
+
+    # Resolve model name
+    # Use specified model or default from config
+    model_key = args.model if args.model else default_model_key
+
+    # Look up the litellm model identifier
+    if model_key not in models_config.get('models', {}):
+        print(f"Error: Model '{model_key}' not found in configs/models.yaml")
+        print(f"Available models: {', '.join(models_config.get('models', {}).keys())}")
+        sys.exit(1)
+
+    # Get the litellm model identifier (e.g., "gemini/gemini-2.0-flash-001")
+    litellm_model = models_config['models'][model_key]['litellm_params']['model']
+    print(f"✓ Using model: {model_key} → {litellm_model}")
 
     # Determine task source
     if args.data:
@@ -641,7 +813,7 @@ if __name__ == "__main__":
             # Create runner instance to access mock mode prompt builder
             runner = EpisodeRunner(
                 template_name=args.template,
-                model_name=args.model,
+                model_name=litellm_model,
                 max_steps=args.max_steps,
                 verbose=not args.quiet
             )
@@ -668,7 +840,7 @@ if __name__ == "__main__":
         result = run_episode(
             task=task,
             template_name=args.template,
-            model_name=args.model,
+            model_name=litellm_model,
             max_steps=args.max_steps,
             verbose=not args.quiet
         )
@@ -678,7 +850,7 @@ if __name__ == "__main__":
         result = run_episode(
             task=task,
             template_name=args.template,
-            model_name=args.model,
+            model_name=litellm_model,
             max_steps=args.max_steps,
             verbose=not args.quiet
         )

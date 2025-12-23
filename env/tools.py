@@ -4,6 +4,7 @@ Tools module providing file operations and command execution via the Sandbox.
 
 from pathlib import Path
 from typing import Dict, Optional, Union
+from datetime import datetime
 from env.sandbox import Sandbox
 
 
@@ -37,14 +38,49 @@ class Tools:
     and execute commands within the sandboxed workspace.
     """
 
-    def __init__(self, sandbox: Sandbox):
+    def __init__(
+        self,
+        sandbox: Sandbox,
+        agent_log_path: Optional[Path] = None,
+        system_log_path: Optional[Path] = None
+    ):
         """
-        Initialize tools with a sandbox instance.
+        Initialize tools with a sandbox instance and optional log paths.
 
         Args:
             sandbox: Sandbox instance to use for operations
+            agent_log_path: Path to agent.log for tool call logging
+            system_log_path: Path to system.log for command output logging
         """
         self.sandbox = sandbox
+        self.agent_log_path = agent_log_path
+        self.system_log_path = system_log_path
+        self._step_counter = 0
+
+    def _log_agent(self, tool_name: str, message: str):
+        """Log agent action to agent.log."""
+        if self.agent_log_path:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._step_counter += 1
+            log_line = f"[{timestamp}] [STEP {self._step_counter}] [TOOL: {tool_name}] {message}\n"
+            with open(self.agent_log_path, 'a') as f:
+                f.write(log_line)
+
+    def _log_system(self, command: str, stdout: str, stderr: str, exit_code: int):
+        """Log system command output to system.log."""
+        if self.system_log_path:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_entry = f"\n{'='*60}\n"
+            log_entry += f"[{timestamp}] Command: {command}\n"
+            log_entry += f"Exit Code: {exit_code}\n"
+            log_entry += f"{'='*60}\n"
+            if stdout:
+                log_entry += f"STDOUT:\n{stdout}\n"
+            if stderr:
+                log_entry += f"STDERR:\n{stderr}\n"
+            log_entry += f"{'='*60}\n"
+            with open(self.system_log_path, 'a') as f:
+                f.write(log_entry)
 
     def write_file(self, path: str, content: str) -> ToolResult:
         """
@@ -76,9 +112,13 @@ class Tools:
             # Write content to file
             file_path.write_text(content, encoding="utf-8")
 
+            # Log action
+            rel_path = str(file_path.relative_to(self.sandbox.workspace_dir))
+            self._log_agent("write_file", f"Created/modified {rel_path} ({len(content)} bytes)")
+
             return ToolResult(
                 success=True,
-                data={"path": str(file_path.relative_to(self.sandbox.workspace_dir)), "bytes_written": len(content)}
+                data={"path": rel_path, "bytes_written": len(content)}
             )
 
         except PermissionError as e:
@@ -133,9 +173,13 @@ class Tools:
             # Read file content
             content = file_path.read_text(encoding="utf-8")
 
+            # Log action
+            rel_path = str(file_path.relative_to(self.sandbox.workspace_dir))
+            self._log_agent("read_file", f"Read {rel_path} ({len(content)} bytes)")
+
             return ToolResult(
                 success=True,
-                data={"path": str(file_path.relative_to(self.sandbox.workspace_dir)), "content": content}
+                data={"path": rel_path, "content": content}
             )
 
         except PermissionError as e:
@@ -188,11 +232,23 @@ class Tools:
                         error=f"Working directory must be within workspace: {cwd}"
                     )
 
+            # Log agent action
+            cwd_str = f" (cwd: {cwd})" if cwd else ""
+            self._log_agent("run_command", f"Executing: {command}{cwd_str}")
+
             # Execute command
             result = self.sandbox.execute(
                 command=command,
                 cwd=working_dir,
                 timeout=timeout
+            )
+
+            # Log system output
+            self._log_system(
+                command=command,
+                stdout=result.stdout,
+                stderr=result.stderr,
+                exit_code=result.exit_code
             )
 
             # Convert SandboxResult to ToolResult
@@ -311,6 +367,10 @@ class Tools:
         Returns:
             ToolResult indicating success
         """
+        # Log agent action
+        summary_msg = f": {summary}" if summary else ""
+        self._log_agent("finish_task", f"Task completed{summary_msg}")
+
         return ToolResult(
             success=True,
             data={
@@ -324,6 +384,9 @@ class Tools:
         Install dependencies using pnpm, forcing the architecture to match Node.js.
         """
         try:
+            # Log agent action
+            self._log_agent("install_deps", "Installing dependencies with pnpm")
+
             # 1. CLEANUP
             # Clear old artifacts to ensure fresh resolution
             items_to_delete = ["pnpm-lock.yaml", "package-lock.json", "node_modules"]
@@ -366,10 +429,26 @@ class Tools:
                 "pnpm install --no-frozen-lockfile", timeout=600, env=install_env
             )
 
+            # Log install output
+            self._log_system(
+                command="pnpm install --no-frozen-lockfile",
+                stdout=result.stdout,
+                stderr=result.stderr,
+                exit_code=result.exit_code
+            )
+
             # 5. REBUILD (The Safety Net)
             if result.success:
                 print("Rebuilding native modules...")
-                self.sandbox.execute("pnpm rebuild", env=install_env)
+                rebuild_result = self.sandbox.execute("pnpm rebuild", env=install_env)
+
+                # Log rebuild output
+                self._log_system(
+                    command="pnpm rebuild",
+                    stdout=rebuild_result.stdout,
+                    stderr=rebuild_result.stderr,
+                    exit_code=rebuild_result.exit_code
+                )
 
                 return ToolResult(
                     success=True,
@@ -403,6 +482,9 @@ class Tools:
             ToolResult with server information
         """
         try:
+            # Log agent action
+            self._log_agent("start_server", f"Starting development server on port {port}")
+
             # Start server in background
             result = self.sandbox.run_background("pnpm dev")
 
