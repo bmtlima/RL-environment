@@ -57,6 +57,7 @@ test_phase4.py
 test_background_processes.py
 test_grader.py
 test_judge.py
+test_llm.py
 
 
 # TODO
