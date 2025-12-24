@@ -295,7 +295,7 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
                     except Exception as e:
                         self._log(f"Warning: Could not read system.log: {e}", prefix="⚠️")
 
-                judge = RubricJudge(model=self.model_name)
+                judge = RubricJudge(model=self.model_name, step_delay=self.step_delay)
 
                 # Use provided rubric or default
                 if rubric is None:

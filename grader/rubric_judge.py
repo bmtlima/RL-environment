@@ -8,6 +8,8 @@ product fit, and edge cases using an LLM as a judge.
 import os
 import json
 import re
+import time
+import math
 from pathlib import Path
 from typing import Dict, List
 import litellm
@@ -27,16 +29,20 @@ class RubricJudge:
     based on a provided rubric.
     """
 
-    def __init__(self, model: str = "gemini/gemini-2.0-flash-001", batch_size: int = 5):
+    def __init__(self, model: str = "gemini/gemini-2.0-flash-001", batch_size: int = 5, step_delay: float = 0.0):
         """
         Initialize the rubric judge.
 
         Args:
             model: LiteLLM model identifier (default: gemini/gemini-2.0-flash-001)
             batch_size: Number of rubric items to evaluate per batch (default: 5)
+            step_delay: Delay in seconds between batch evaluations.
+                       Individual items within a batch are delayed by ceiling(step_delay/3) seconds.
+                       (default: 0.0)
         """
         self.model = model
         self.batch_size = batch_size
+        self.step_delay = step_delay
 
     def _discover_source_files(self, workspace_path: Path) -> List[Path]:
         """
@@ -180,6 +186,120 @@ class RubricJudge:
             print(f"⚠️ Warning: Could not read system.log: {e}")
             return ""
 
+    def _evaluate_single_item(
+        self,
+        rubric_item: str,
+        code_context: str,
+        system_log: str
+    ) -> Dict:
+        """
+        Evaluate a single rubric item using evidence-based grading.
+
+        Args:
+            rubric_item: Single rubric requirement string
+            code_context: Assembled source code
+            system_log: Contents of system.log (build/install output)
+
+        Returns:
+            Evaluation result with format:
+            {
+                "item": "1. Feature description...",
+                "status": "PASS" or "FAIL",
+                "evidence": "file.ts:42 - description"
+            }
+        """
+        system_prompt = """You are a Senior QA Engineer performing evidence-based code review.
+
+Your task is to verify whether a specific requirement is implemented in the codebase.
+
+CRITICAL RULES:
+1. For PASS, you MUST cite the specific file path and line number where the requirement is implemented.
+2. If you cannot find concrete evidence in the code, mark it as FAIL.
+3. Do not hallucinate or assume code exists. Only cite code you can actually see.
+4. Use system logs (build/install output) as supporting evidence when relevant.
+
+You will be given:
+- A requirement to verify
+- The complete source code
+- System logs (build, install, server output)
+
+Determine:
+- Status: PASS or FAIL
+- Evidence: File path, line numbers, and brief explanation (for PASS) OR reason for failure (for FAIL)
+
+CRITICAL: You must respond with valid JSON only. No markdown, no code blocks, just pure JSON.
+
+Response format:
+{
+  "item": "1. Application implements user registration...",
+  "status": "PASS",
+  "evidence": "app/auth/route.ts:42-55 - POST endpoint with supabase.auth.signUp call"
+}"""
+
+        user_message = f"""# Requirement to Verify
+
+{rubric_item}
+
+# Source Code
+
+{code_context}
+
+# System Logs (Build/Install Output)
+
+{system_log[:5000]}  # Truncate to first 5000 chars
+
+Verify the requirement and respond with JSON only."""
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
+        ]
+
+        try:
+            response = litellm.completion(
+                model=self.model,
+                messages=messages,
+                temperature=0.2,  # Low temperature for factual verification
+                max_tokens=1000,
+                num_retries=3,
+                timeout=60
+            )
+
+            response_text = response.choices[0].message.content.strip()
+
+            # Handle markdown code blocks
+            if response_text.startswith("```"):
+                lines = response_text.split("\n")
+                json_lines = []
+                in_block = False
+                for line in lines:
+                    if line.startswith("```"):
+                        in_block = not in_block
+                        continue
+                    if in_block or (not line.startswith("```") and "{" in line):
+                        json_lines.append(line)
+                response_text = "\n".join(json_lines)
+
+            result = json.loads(response_text)
+
+            # Validate structure
+            if "status" not in result or "evidence" not in result:
+                raise ValueError("LLM response missing 'status' or 'evidence'")
+
+            # Ensure the item field is present
+            if "item" not in result:
+                result["item"] = rubric_item
+
+            return result
+
+        except Exception as e:
+            print(f"❌ Error evaluating item: {e}")
+            return {
+                "item": rubric_item,
+                "status": "FAIL",
+                "evidence": f"Evaluation error: {str(e)}"
+            }
+
     def _evaluate_batch(
         self,
         batch_items: List[str],
@@ -205,109 +325,26 @@ class RubricJudge:
                 ...
             ]
         """
-        system_prompt = """You are a Senior QA Engineer performing evidence-based code review.
+        results = []
 
-Your task is to verify whether specific requirements are implemented in the codebase.
+        # Calculate delay between individual items
+        item_delay = math.ceil(self.step_delay / 3) if self.step_delay > 0 else 0
 
-CRITICAL RULES:
-1. For every PASS, you MUST cite the specific file path and line number where the requirement is implemented.
-2. If you cannot find concrete evidence in the code, mark it as FAIL.
-3. Do not hallucinate or assume code exists. Only cite code you can actually see.
-4. Use system logs (build/install output) as supporting evidence when relevant.
-
-You will be given:
-- A list of requirements to verify
-- The complete source code
-- System logs (build, install, server output)
-
-For each requirement, determine:
-- Status: PASS or FAIL
-- Evidence: File path, line numbers, and brief explanation (for PASS) OR reason for failure (for FAIL)
-
-CRITICAL: You must respond with valid JSON only. No markdown, no code blocks, just pure JSON.
-
-Response format:
-{
-  "results": [
-    {
-      "item": "1. Application implements user registration...",
-      "status": "PASS",
-      "evidence": "app/auth/route.ts:42-55 - POST endpoint with supabase.auth.signUp call"
-    },
-    {
-      "item": "2. Feature X is missing",
-      "status": "FAIL",
-      "evidence": "No implementation found in codebase"
-    }
-  ]
-}"""
-
-        # Build requirements list
-        requirements_text = "\n".join(batch_items)
-
-        user_message = f"""# Requirements to Verify
-
-{requirements_text}
-
-# Source Code
-
-{code_context}
-
-# System Logs (Build/Install Output)
-
-{system_log[:5000]}  # Truncate to first 5000 chars
-
-Verify each requirement and respond with JSON only."""
-
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message}
-        ]
-
-        try:
-            response = litellm.completion(
-                model=self.model,
-                messages=messages,
-                temperature=0.2,  # Low temperature for factual verification
-                max_tokens=3000,
-                num_retries=3,
-                timeout=60
+        for idx, item in enumerate(batch_items):
+            # Evaluate single item
+            result = self._evaluate_single_item(
+                rubric_item=item,
+                code_context=code_context,
+                system_log=system_log
             )
+            results.append(result)
 
-            response_text = response.choices[0].message.content.strip()
+            # Add delay between items (but not after the last one in the batch)
+            if item_delay > 0 and idx < len(batch_items) - 1:
+                print(f"    ⏱️  Item delay: {item_delay}s...")
+                time.sleep(item_delay)
 
-            # Handle markdown code blocks
-            if response_text.startswith("```"):
-                lines = response_text.split("\n")
-                json_lines = []
-                in_block = False
-                for line in lines:
-                    if line.startswith("```"):
-                        in_block = not in_block
-                        continue
-                    if in_block or (not line.startswith("```") and "{" in line):
-                        json_lines.append(line)
-                response_text = "\n".join(json_lines)
-
-            result = json.loads(response_text)
-
-            # Validate structure
-            if "results" not in result or not isinstance(result["results"], list):
-                raise ValueError("LLM response missing 'results' list")
-
-            return result["results"]
-
-        except Exception as e:
-            print(f"❌ Error evaluating batch: {e}")
-            # Return FAIL for all items in batch
-            return [
-                {
-                    "item": item,
-                    "status": "FAIL",
-                    "evidence": f"Evaluation error: {str(e)}"
-                }
-                for item in batch_items
-            ]
+        return results
 
     def _build_prompt(self, user_prompt: str, rubric: str, code_context: str) -> List[Dict]:
         """
@@ -463,6 +500,11 @@ Evaluate the code based on the rubric above. Respond with JSON only."""
             all_results.extend(batch_results)
 
             print(f"  ✓ Batch {batch_num} complete")
+
+            # Add delay between batches (but not after the last one)
+            if self.step_delay > 0 and batch_num < num_batches:
+                print(f"  ⏱️  Waiting {self.step_delay}s before next batch...")
+                time.sleep(self.step_delay)
 
         # Calculate stats
         total_items = len(all_results)
