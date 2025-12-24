@@ -258,26 +258,57 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
             )
             grader_results = grader.run_all_checks()
 
-            # Step 4: Run LLM Judge
-            self._log("\n[4/4] Running LLM Judge", prefix="⚖️")
-            judge = RubricJudge(model=self.model_name)
+            # Step 4: Run LLM Judge (only if build passed)
+            if not grader_results.get("overall_pass", False):
+                # Build/install/server failed - skip LLM judge to save costs
+                self._log("\n[4/4] Skipping LLM Judge (build failed)", prefix="⚖️")
+                judge_results = {
+                    "score": 0,
+                    "pass_rate": 0.0,
+                    "reasoning": "Build/install/server checks failed - skipped LLM evaluation",
+                    "breakdown": [],
+                    "metadata": {
+                        "files_evaluated": 0,
+                        "model": self.model_name,
+                        "total_items": 0,
+                        "passed_items": 0,
+                        "skipped": True
+                    }
+                }
+            else:
+                # Build passed - run LLM judge
+                self._log("\n[4/4] Running LLM Judge", prefix="⚖️")
 
-            # Use provided rubric or default
-            if rubric is None:
-                rubric = self._get_default_rubric()
+                # Read and truncate system.log
+                system_log = ""
+                if self.system_log_path and self.system_log_path.exists():
+                    try:
+                        with open(self.system_log_path, 'r', encoding='utf-8') as f:
+                            full_log = f.read()
+                            # Keep only last 3000 characters (to capture build errors)
+                            system_log = full_log[-3000:] if len(full_log) > 3000 else full_log
+                    except Exception as e:
+                        self._log(f"Warning: Could not read system.log: {e}", prefix="⚠️")
 
-            judge_results = judge.evaluate(
-                workspace_path=str(self.workspace_dir),
-                prompt=task,
-                rubric=rubric
-            )
+                judge = RubricJudge(model=self.model_name)
+
+                # Use provided rubric or default
+                if rubric is None:
+                    rubric = self._get_default_rubric()
+
+                judge_results = judge.evaluate(
+                    workspace_path=str(self.workspace_dir),
+                    prompt=task,
+                    rubric=rubric,
+                    system_log=system_log
+                )
 
             # Combine all results
             grade_result = {
                 "automated_checks": grader_results,
                 "llm_evaluation": judge_results,
                 "overall_score": judge_results.get("score", 0),
-                "overall_pass": grader_results.get("overall_pass", False) and judge_results.get("score", 0) >= 60
+                "overall_pass": grader_results.get("overall_pass", False) and judge_results.get("score", 0) >= 2
             }
 
             # Save grade result
@@ -454,22 +485,35 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
 
         # LLM evaluation section
         llm_eval = grade_result.get("llm_evaluation", {})
+        score = llm_eval.get('score', 0)
+        pass_rate = llm_eval.get('pass_rate', 0.0)
+
+        # Score labels
+        score_labels = {0: "Build Failed", 1: "Poor", 2: "Weak", 3: "Good", 4: "Perfect"}
+        score_label = score_labels.get(score, "Unknown")
+
         report_lines.extend([
             "## LLM Judge Evaluation",
             "",
-            f"**Overall Score:** {llm_eval.get('score', 0)}/100",
+            f"**Overall Score:** {score}/4 ({score_label})",
+            f"**Pass Rate:** {pass_rate:.1%}",
             "",
         ])
 
-        # Add breakdown if available
-        breakdown = llm_eval.get("breakdown", {})
-        if breakdown:
+        # Add breakdown if available (now a list of items with evidence)
+        breakdown = llm_eval.get("breakdown", [])
+        if breakdown and isinstance(breakdown, list):
             report_lines.extend([
-                "### Criteria Breakdown",
+                "### Requirements Breakdown",
                 ""
             ])
-            for criterion, score in breakdown.items():
-                report_lines.append(f"- **{criterion}:** {score}/100")
+            for item_result in breakdown:
+                item = item_result.get("item", "Unknown")
+                status = item_result.get("status", "UNKNOWN")
+                evidence = item_result.get("evidence", "No evidence")
+                status_icon = "✅" if status == "PASS" else "❌"
+                report_lines.append(f"- {status_icon} **{item}**")
+                report_lines.append(f"  - Evidence: {evidence}")
             report_lines.append("")
 
         # Add reasoning if available
@@ -484,13 +528,14 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
         # Overall result
         overall_pass = grade_result.get("overall_pass", False)
         overall_score = grade_result.get("overall_score", 0)
+        score_label = score_labels.get(overall_score, "Unknown")
         report_lines.extend([
             "---",
             "",
             "## Final Result",
             "",
             f"- **Status:** {'✅ PASS' if overall_pass else '❌ FAIL'}",
-            f"- **Final Score:** {overall_score}/100",
+            f"- **Final Score:** {overall_score}/4 ({score_label})",
             "",
         ])
 
@@ -557,22 +602,28 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
         print("-" * 70)
         llm_eval = grade_result.get("llm_evaluation", {})
         score = llm_eval.get("score", 0)
-        print(f"  Score:        {score}/100")
+        pass_rate = llm_eval.get("pass_rate", 0.0)
+        score_labels = {0: "Build Failed", 1: "Poor", 2: "Weak", 3: "Good", 4: "Perfect"}
+        score_label = score_labels.get(score, "Unknown")
+        print(f"  Score:        {score}/4 ({score_label})")
+        print(f"  Pass Rate:    {pass_rate:.1%}")
 
-        # Show breakdown if available
-        breakdown = llm_eval.get("breakdown", {})
-        if breakdown:
-            print(f"  Breakdown:")
-            for criterion, criterion_score in breakdown.items():
-                print(f"    - {criterion}: {criterion_score}")
+        # Show breakdown if available (now a list)
+        breakdown = llm_eval.get("breakdown", [])
+        if breakdown and isinstance(breakdown, list):
+            passed = sum(1 for item in breakdown if item.get("status") == "PASS")
+            total = len(breakdown)
+            print(f"  Requirements: {passed}/{total} passed")
 
         # Overall result
         print("\n🏆 OVERALL RESULT")
         print("-" * 70)
         overall_pass = grade_result.get("overall_pass", False)
         overall_status = "✅ PASS" if overall_pass else "❌ FAIL"
+        overall_score = grade_result.get("overall_score", 0)
+        overall_label = score_labels.get(overall_score, "Unknown")
         print(f"  Status:       {overall_status}")
-        print(f"  Final Score:  {score}/100")
+        print(f"  Final Score:  {overall_score}/4 ({overall_label})")
 
         # Cost (if available in agent_result)
         if "total_cost" in agent_result:
