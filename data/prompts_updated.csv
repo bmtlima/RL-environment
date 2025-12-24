@@ -1,0 +1,373 @@
+App Name,App Description,Prompt,Addition for CLI Tools,Rubric
+Stopwatch,"A web application that provides a responsive stopwatch with start, stop, reset, and lap functionalities, featuring accurate time tracking in MM:SS format, localStorage persistence, and an accessible, user-friendly interface for both desktop and mobile devices.","# Task
+Create a stopwatch web app with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a simple stopwatch that can start, stop/pause, and reset time. The stopwatch must display elapsed time in MM:SS format and provide a clean, centered UI that works well on desktop and mobile. The timer must be accurate, avoid double-interval bugs, and continue behaving correctly across rapid button presses.
+
+## Feature Requirements
+1. Render a centered stopwatch display and control panel on the page.
+2. Display elapsed time in MM:SS format (e.g., 00:00, 03:27, 12:05).
+3. Implement a Start button that begins counting up from the current elapsed time.
+4. Implement a Stop button that pauses the timer without resetting the elapsed time.
+5. Implement a Reset button that sets the stopwatch back to 00:00 and stops it if running.
+6. Prevent multiple timer loops from running simultaneously (no double-interval bug).
+7. Ensure the stopwatch remains accurate over time (avoid drift as much as possible).
+8. Disable or visually adjust buttons appropriately (e.g., Start disabled while running; Stop disabled while stopped).
+9. Support rapid repeated clicks on Start/Stop/Reset without breaking state.
+10. Implement a Lap feature that records the current time as a lap entry (Lap 1, Lap 2, …).
+11. Display laps in a scrollable list with newest lap at the top.
+12. Allow clearing all laps with a Clear Laps button (without affecting the current timer value).
+13. Persist stopwatch state (elapsed time, running/stopped, laps) to localStorage so a refresh restores the session.
+14. Provide clear empty states (e.g., “No laps yet”).
+15. Ensure accessibility: buttons are keyboard reachable, have clear labels, and the time display is readable by screen readers.
+
+## UX and UI Requirements
+1. Keep the layout centered with a prominent time display.
+2. Use large, high-contrast typography for the time.
+3. Use consistent button styling with clear affordances for primary vs secondary actions.
+4. Ensure the layout is responsive and usable on small screens.
+
+## Quality Requirements
+1. No console errors or warnings during normal use.
+2. Clean component structure and readable code.
+3. Include basic inline comments explaining the timer logic and persistence strategy.
+",You are working with a Next.js template within an isolated container.,"# Rubric Items
+1. Application renders a centered stopwatch time display and control buttons.
+2. Application displays elapsed time in MM:SS format at all times (including leading zeros).
+3. Application Start button begins counting up from the current elapsed time.
+4. Application Stop button pauses the timer without resetting elapsed time.
+5. Application Reset button stops the timer (if running) and sets elapsed time to 00:00.
+6. Application prevents multiple concurrent timer loops (no double-interval behavior after repeated Start clicks).
+7. Application maintains accurate elapsed time (does not noticeably drift over typical usage).
+8. Application correctly handles rapid sequences of Start/Stop/Reset without breaking state or UI.
+9. Application disables or visually distinguishes invalid actions (e.g., Start disabled while running; Stop disabled while stopped).
+10. Application implements a Lap feature that records the current MM:SS value as a lap.
+11. Application displays laps in a scrollable list with newest lap first.
+12. Application labels laps sequentially (Lap 1, Lap 2, …) and numbering remains consistent across actions.
+13. Application provides a Clear Laps control that removes all laps without changing the current elapsed time.
+14. Application shows an explicit empty state when no laps exist (e.g., “No laps yet”).
+15. Application persists elapsed time, running/stopped state, and laps to localStorage.
+16. Application restores persisted elapsed time, running/stopped state, and laps correctly after a page refresh.
+17. Application does not lose or corrupt persisted state when an action occurs during/after restore.
+18. Application provides clear loading/saving feedback where appropriate (e.g., subtle “Saved” indicator or non-blocking behavior).
+19. Application includes accessible controls: buttons have descriptive labels and are keyboard operable.
+20. Application time display is accessible to screen readers (e.g., appropriate aria-label/live region behavior that is not overly noisy).
+21. Application layout is responsive and usable on small screens without clipping or overlapping controls.
+22. Application runs without console errors/warnings during normal usage.
+23. Application code is organized cleanly (separated components/hooks where appropriate) and includes brief comments explaining timer and persistence logic.
+"
+Writing UI,"A web application that provides a responsive and accessible writing interface with a centered text box, real-time text formatting options, and persistent content storage using localStorage, featuring a toolbar for font size, color, and styling controls.","# Task
+Create a writing UI web app with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a minimal writing interface with a centered text box where users can type and format their text. Provide a toolbar with controls to change font size, font color, and toggle bold/italic styling. The formatting controls must immediately affect the text inside the editor and reflect the current active styles. The UI should be responsive, accessible, and persist the user’s content and formatting choices across refreshes.
+
+## Feature Requirements
+1. Render a centered writing area with a prominent editable text box.
+2. Provide a toolbar with controls for:
+   - Font size (at least 3 discrete sizes)
+   - Font color (at least 5 preset colors)
+   - Bold toggle
+   - Italic toggle
+3. Ensure formatting controls apply to the text in the editor immediately.
+4. Ensure formatting controls reflect active state (e.g., bold button appears active when bold is enabled).
+5. Support selecting existing text and applying formatting to the selection.
+6. If no text is selected, applying formatting should affect newly typed text going forward.
+7. Provide a Clear Formatting control that resets styles back to defaults.
+8. Provide a Clear Text control that empties the editor.
+9. Persist editor content and formatting state to localStorage and restore on refresh.
+10. Ensure accessibility: keyboard navigation for toolbar and editor, visible focus styles, and clear labels.
+
+## UX and UI Requirements
+1. Center the editor on the page with comfortable padding and a clean layout.
+2. Make the toolbar sticky above the editor or clearly attached to it.
+3. Provide responsive layout so the editor works well on mobile.
+
+## Quality Requirements
+1. No console errors or warnings during normal use.
+2. Clean component structure and readable code.
+3. Include brief inline comments explaining formatting state and persistence logic.
+",You are working with a Next.js template within an isolated container.,"# Rubric Items
+1. Application renders a centered writing UI with an editable text box.
+2. Application renders a toolbar containing font size control, font color control, bold toggle, and italic toggle.
+3. Application provides at least 3 selectable font sizes that visibly change text size in the editor.
+4. Application provides at least 5 preset font colors that visibly change text color in the editor.
+5. Application bold toggle correctly applies and removes bold styling.
+6. Application italic toggle correctly applies and removes italic styling.
+7. Application formatting controls update the editor immediately upon interaction.
+8. Application toolbar controls reflect active state (e.g., bold/italic visually active when enabled).
+9. Application supports formatting a selected range of text (selection-based formatting works).
+10. Application applies formatting to newly typed text when no selection exists (formatting “mode” persists while typing).
+11. Application supports changing font size and font color for selected text (selection-based size/color works).
+12. Application provides a Clear Formatting control that restores default styles without deleting text.
+13. Application provides a Clear Text control that empties the editor content.
+14. Application preserves formatting behavior correctly after clearing formatting (new typing uses defaults).
+15. Application persists editor content to localStorage.
+16. Application persists formatting state (current bold/italic, current font size, current font color) to localStorage.
+17. Application restores persisted content and formatting correctly after a page refresh.
+18. Application handles rapid repeated toggles/changes (size/color/bold/italic) without breaking UI state.
+19. Application provides accessible labels for toolbar controls (aria-labels or visible labels).
+20. Application allows full keyboard usage: tab to toolbar controls, activate controls via keyboard, and type in editor.
+21. Application shows visible focus indicators for toolbar controls and the editor.
+22. Application layout is responsive and usable on small screens without clipped controls.
+23. Application runs without console errors/warnings during normal usage.
+24. Application code is cleanly structured and includes brief comments explaining formatting logic and persistence.
+"
+Kanban Board,"A responsive Kanban board web application that allows users to create, edit, delete, and manage tasks across three columns (To Do, In Progress, Done) with drag-and-drop functionality, persistent state storage, and accessibility features for both mouse and keyboard navigation.","# Task
+Create a Kanban board web app with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create a Kanban board with three columns—To Do, In Progress, and Done—where users can create, edit, delete, and move tasks between columns using drag and drop. The board must feel responsive, prevent state corruption, and persist all tasks across refreshes. The UI must be accessible and usable with both mouse and keyboard.
+
+## Feature Requirements
+1. Render three columns labeled: To Do, In Progress, Done.
+2. Display task cards within each column.
+3. Allow users to create a new task with at minimum: title (required) and optional description.
+4. Allow users to edit an existing task’s title and description.
+5. Allow users to delete a task with a confirmation step.
+6. Support drag-and-drop movement of tasks between columns.
+7. Support drag-and-drop reordering of tasks within the same column.
+8. Provide clear visual feedback while dragging (active item + drop targets).
+9. Ensure drag-and-drop updates state immediately and reliably after drop.
+10. Persist the board state (all tasks, their column, and their order) to localStorage and restore on refresh.
+11. Provide an empty-state UI for columns with no tasks.
+12. Include a “Reset Board” control that restores the initial default tasks/layout.
+13. Ensure accessibility: keyboard navigation for tasks and controls, and an accessible alternative for moving tasks (e.g., a “Move to…” menu on each task).
+
+## UX and UI Requirements
+1. Keep the board layout responsive: columns stack or scroll appropriately on small screens.
+2. Task cards should be clearly readable with consistent spacing and styling.
+3. Provide a clean modal or inline editor for creating/editing tasks.
+
+## Quality Requirements
+1. No console errors or warnings during normal use.
+2. Avoid drag/drop glitches (no duplicates, lost tasks, or broken ordering).
+3. Clean component structure and readable code with brief inline comments explaining drag/drop + persistence logic.
+",You are working with a Next.js template within an isolated container.,"# Rubric Items
+1. Application renders exactly three columns labeled “To Do”, “In Progress”, and “Done”.
+2. Application displays tasks as cards inside their respective columns.
+3. Application allows creating a task with a required title and prevents creation with an empty title.
+4. Application allows adding an optional description to a task.
+5. Application allows editing an existing task’s title and description and persists the changes.
+6. Application allows deleting a task and requires a confirmation action before removal.
+7. Application supports dragging a task from one column to another and updates the task’s column correctly after drop.
+8. Application supports reordering tasks within a column via drag and drop and preserves the new order.
+9. Application provides clear drag UI feedback (dragging style and visible drop target/placeholder).
+10. Application prevents drag/drop bugs: tasks are never duplicated, lost, or stuck between columns.
+11. Application updates the UI immediately after any drag/drop action without requiring a refresh.
+12. Application persists all tasks (including column and order) to localStorage.
+13. Application restores the full board state from localStorage correctly after a page refresh.
+14. Application provides a visible empty state for columns with zero tasks.
+15. Application includes a Reset Board control that restores a default initial board state.
+16. Application Reset Board overwrites persisted state and updates the UI immediately.
+17. Application supports moving tasks without a mouse (keyboard-accessible alternative such as “Move to…” control).
+18. Application supports keyboard navigation across columns, task cards, and primary controls.
+19. Application provides accessible labels for inputs and controls (visible labels or aria-labels).
+20. Application is responsive and usable on small screens (no clipped columns/buttons; reasonable scrolling/stacking).
+21. Application runs without console errors/warnings during normal use.
+22. Application code is cleanly structured and includes brief comments explaining drag/drop state updates and persistence.
+"
+Stock Chart,"A web application that provides an interactive stock chart for a simulated stock ticker ""FAKE,"" featuring responsive HTML5 Canvas rendering, simulated price data from a custom API, time range selection, hover interactions, and localStorage persistence for user preferences.","# Task
+Create a stock chart web app for a simulated stock called FAKE with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Create an interactive stock chart for a simulated stock ticker FAKE. The chart must support four time ranges—1 Day, 1 Month, 1 Year, and 5 Years—and must use the HTML5 Canvas API to draw the graph (no SVG/chart libraries for rendering). Data must be simulated via a fake API and the UI must include clean range switching, hover inspection, and clear axis labeling.
+
+## Feature Requirements
+1. Display the ticker name “FAKE” and the currently selected time range.
+2. Render the price chart using a <canvas> element and the Canvas 2D drawing API (no SVG-based charts).
+3. Provide range selector buttons for: 1D, 1M, 1Y, 5Y.
+4. Fetch price data for the selected range from a fake API endpoint you implement (e.g., GET /api/prices?range=1d|1m|1y|5y).
+5. Simulate realistic-ish price movement (trend + noise) and include at least:
+   - timestamps
+   - prices (numbers)
+6. On range switch, show a loading state, then re-render the canvas with the new dataset.
+7. Draw axes and tick labels appropriate to the range:
+   - X-axis shows time (hours for 1D, dates for 1M/1Y, years for 5Y)
+   - Y-axis shows price values with at least 4 tick labels
+8. Draw the main price line and a subtle filled area under the line.
+9. Implement hover/crosshair interaction:
+   - When the user moves the mouse over the canvas, show a vertical crosshair and a tooltip with the nearest point’s time + price.
+10. Implement a “latest price” display above the chart that updates with the selected range (shows last data point).
+11. Handle empty/error states gracefully:
+   - If the fake API returns an error, show a non-blocking error banner and a Retry button.
+12. Make the canvas responsive:
+   - Resize/redraw when the container size changes (e.g., window resize).
+13. Persist the last selected range in localStorage and restore it on refresh.
+
+## UX and UI Requirements
+1. Layout should be clean and centered, with clearly styled range buttons and a prominent chart.
+2. Active range button should be visually highlighted.
+3. Tooltip must be readable and not clipped off-screen.
+
+## Quality Requirements
+1. No console errors or warnings during normal use.
+2. Canvas rendering should be crisp on high-DPI displays (handle devicePixelRatio).
+3. Code should be organized cleanly with brief inline comments explaining scaling, drawing, and hover detection.
+",You are working with a Next.js template within an isolated container.,"# Rubric Items
+1. Application displays the simulated ticker name “FAKE” and the currently selected range.
+2. Application renders the chart using an HTML canvas element and Canvas 2D drawing calls (not an SVG/chart library renderer).
+3. Application provides four range selector buttons: 1D, 1M, 1Y, 5Y.
+4. Application highlights the active range button and updates the range label when a new range is selected.
+5. Application implements a fake API endpoint that returns price history for each requested range.
+6. Application fetches data from the fake API on initial load and on every range change.
+7. Application shows a loading state while fetching data and does not freeze the UI during fetch.
+8. Application draws X and Y axes on the canvas.
+9. Application draws at least 4 Y-axis tick labels with correctly scaled values based on the dataset min/max.
+10. Application formats X-axis labels appropriately per range (hours for 1D; dates for 1M/1Y; years for 5Y).
+11. Application plots the price line correctly scaled to the canvas drawing area (no inverted or clipped line).
+12. Application renders a filled area under the line (area chart effect) in addition to the line.
+13. Application displays the latest price above the chart and updates it after each range change.
+14. Application implements hover interaction: moving the pointer over the canvas shows a vertical crosshair.
+15. Application tooltip displays the nearest data point’s timestamp and price and updates as the pointer moves.
+16. Application selects the nearest point correctly (snaps to closest X position within the dataset).
+17. Application hides or resets tooltip/crosshair when the pointer leaves the canvas.
+18. Application handles devicePixelRatio correctly (chart is crisp on retina/high-DPI screens).
+19. Application redraws the canvas correctly when the container/window is resized (no stretched bitmap; proper recalculation).
+20. Application handles fake API failures by showing an error message and providing a Retry action that refetches.
+21. Application persists the last selected range to localStorage.
+22. Application restores the persisted range on refresh and renders the correct dataset without user interaction.
+23. Application runs without console errors/warnings during normal usage.
+24. Application code is cleanly structured and includes brief comments explaining scaling, drawing pipeline, and hover logic.
+"
+Scheduler,"A web application that provides an interactive scheduling board with a calendar view, allowing users to create, edit, delete, and drag/reschedule events while enforcing no-overlap rules through a fake API, complete with structured error handling and a responsive design.","# Task
+Create a scheduling board web app with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Build an interactive scheduler with a calendar view (day or week). Users must be able to create, edit, delete, and drag/reschedule events. All event data must be loaded and mutated through a fake API that enforces a strict no-overlap rule (events may not overlap in time for the same calendar/resource). When a conflict occurs, the fake API must return structured validation errors that the UI displays clearly and contextually.
+
+## Feature Requirements
+1. Render a calendar view (week view recommended) showing time slots and events.
+2. Implement an event model with at least: id, title, start datetime, end datetime, and optional location/notes.
+3. Load events for the visible calendar range by calling a fake API endpoint you implement.
+4. Allow users to create events by selecting a time range (click+drag on the calendar grid) or via an “Add Event” button.
+5. Show an event editor modal (or side panel) with fields for title, start, end, and optional fields.
+6. Allow editing existing events via clicking an event to open the editor.
+7. Allow deleting events with a confirmation step.
+8. Support drag-and-drop moving events to a different time/day.
+9. Support resizing events to change duration.
+10. All create/update/delete operations must call the fake API and update the UI accordingly.
+11. Fake API must enforce: no two events may overlap in time (inclusive/exclusive rules defined by you) within the same calendar/resource.
+12. On conflict, fake API must return structured validation errors (e.g., error code, message, conflicting event ids/times).
+13. UI must display conflict errors clearly, including which existing event(s) conflict and the conflicting time window.
+14. If a drag or resize update fails due to conflict, the UI must revert the event to its original position/size.
+15. Include loading and error states for fetching and saving.
+16. Persist events across refreshes using a durable fake API backing store (e.g., localStorage-backed store accessed through API).
+17. Provide a “Today” control and next/previous navigation for the calendar range.
+18. Ensure keyboard accessibility for primary actions (open editor, save, cancel, delete).
+
+## UX and UI Requirements
+1. Active interactions (saving, dragging) must provide visible feedback (spinners, “Saving…” badge, etc.).
+2. The event editor must validate basic inputs (title required; end after start) before calling the API.
+3. The layout must be responsive and usable on smaller screens (reasonable scrolling/stacking).
+
+## Quality Requirements
+1. No console errors or warnings during normal use.
+2. No duplicate events, lost updates, or broken drag behavior after repeated interactions.
+3. Code should be cleanly organized with brief comments explaining API conflict checks and UI rollback behavior.
+",You are working with a Next.js template within an isolated container.,"# Rubric Items
+1. Application renders a calendar view with visible time slots and events.
+2. Application loads events for the current visible date range by calling a fake API endpoint.
+3. Application provides calendar navigation controls (Today, Next, Previous) that change the visible range and refetch events.
+4. Application allows event creation via calendar selection and/or an Add Event button.
+5. Application displays an event editor (modal/panel) with fields for title, start, and end (and optional fields if included).
+6. Application requires a non-empty title before allowing save.
+7. Application prevents saving an event where end time is not after start time.
+8. Application creates events by calling the fake API and renders the new event on the calendar after success.
+9. Application allows editing an event by clicking it, updating fields, and saving via fake API.
+10. Application allows deleting an event with a confirmation step and removes it after API success.
+11. Application supports dragging events to new times/days and persists the change via fake API.
+12. Application supports resizing events to change duration and persists the change via fake API.
+13. Fake API enforces a no-overlap rule for events (conflicts are detected server-side, not only client-side).
+14. When a conflict occurs, fake API returns a structured validation error (includes an error code/type and conflict details).
+15. UI displays conflict errors clearly and includes details of the conflicting event(s) and time window.
+16. On conflict during drag/rescale/update, the application reverts the event visually to its original time/duration.
+17. Application shows loading states for initial fetch and saving states for mutations (create/edit/drag/resize/delete).
+18. Application handles API failures (non-conflict errors) with a visible error message and a retry or recovery path.
+19. Application persists events across page refreshes (events reappear after reload via the API-backed store).
+20. Application does not create duplicate events or lose events after repeated drag/resize/save operations.
+21. Application supports keyboard navigation for primary flows (open editor, cancel, save) and has accessible labels.
+22. Application is responsive and usable on small screens without clipped controls.
+23. Application runs without console errors/warnings during normal usage.
+24. Application code is cleanly structured and includes brief comments explaining conflict validation and rollback logic.
+"
+Checkout Simulator,"A web application that simulates a checkout process, allowing users to manage a shopping cart, apply promo codes, select shipping options, and enter shipping details, with all pricing calculations handled by a server-side fake API, ensuring a seamless and validated order confirmation experience.","# Task
+Create a checkout simulator web app with all the features outlined below. If API keys are necessary, please request them from me and I will provide. You are not allowed to ask the user any follow up questions. Select all technical, architectural, and service-level details yourself. Do not ask the user to decide between services, APIs, frameworks, libraries, tools, or design paths.
+
+## Functionality Overview
+Build a checkout simulator that lets users add/remove items from a cart, apply promo codes, select a shipping option, and enter a shipping address. The application must display an order summary (subtotal, discounts, tax, shipping, total) where ALL monetary calculations are produced by a fake API that enforces server-side pricing rules. The UI must support a complete flow ending in an order confirmation page showing a generated order ID and order details. Totals must never be calculated client-side beyond displaying API results.
+
+## Feature Requirements
+1. Display a catalog of at least 6 purchasable items with name, price, and “Add to cart” controls.
+2. Display a cart view listing items, quantities, per-line totals, and controls to increment/decrement quantity and remove items.
+3. Support a promo code input with an Apply button.
+4. Support removing a promo code and reverting totals.
+5. Support selecting a shipping option (at minimum: Standard and Express) that affects shipping cost.
+6. Collect shipping address fields (at minimum: full name, address line, city, postal code, country).
+7. Show an Order Summary panel that displays: subtotal, discount, tax, shipping, and grand total.
+8. All totals (subtotal/discount/tax/shipping/total) must come from a fake API you implement:
+   - Recalculate totals whenever cart contents, promo code, shipping option, or address changes.
+9. Fake API must implement pricing rules including:
+   - Per-item prices from server-side source of truth
+   - Promo code validation (valid/invalid/expired) with a discount rule you define
+   - Tax calculation based on shipping country (or postal code rule you define)
+   - Shipping calculation based on shipping option (and optionally cart total/weight rules you define)
+10. UI must show loading states while totals are recalculating and prevent checkout submission while pricing is stale.
+11. Place Order button must create an order by calling a fake API endpoint and return:
+   - orderId
+   - purchased items and quantities
+   - final totals breakdown
+   - applied promo details (if any)
+12. After successful order creation, navigate to an Order Confirmation view showing orderId and a summary of the purchase.
+13. Handle API validation errors with structured messages (e.g., invalid promo, invalid address, out-of-stock) and display them inline.
+14. Persist cart state (items, quantities, promo code, shipping selection, address draft) in localStorage and restore on refresh.
+15. Provide a Reset Checkout button that clears local state and resets the cart to empty.
+
+## Fake API Requirements
+1. Implement at least these endpoints:
+   - GET /api/catalog
+   - POST /api/pricing (returns totals breakdown)
+   - POST /api/orders (creates order; returns confirmation payload)
+2. Simulate network latency (300–900ms) and occasional non-conflict errors (~10% 500 responses).
+3. Enforce all pricing and validation rules server-side; client must not compute totals independently.
+
+## UX and UI Requirements
+1. Clear separation of Catalog, Cart, and Order Summary.
+2. Inline validation feedback for promo and address fields.
+3. Responsive layout for desktop and mobile.
+
+## Quality Requirements
+1. No console errors or warnings during normal use.
+2. Prevent double-submit of orders (idempotent UI behavior).
+3. Clean component structure with brief comments explaining server-driven pricing and error handling.
+",You are working with a Next.js template within an isolated container.,"# Rubric Items
+1. Application renders a product catalog with at least 6 items and an Add to cart control for each.
+2. Application loads catalog data from a fake API endpoint (GET /api/catalog).
+3. Application renders a cart list showing item name, quantity, per-line total, and remove control.
+4. Application supports incrementing and decrementing item quantity and updates cart state correctly.
+5. Application supports removing an item from the cart and updates cart state correctly.
+6. Application provides a promo code input and Apply action.
+7. Application provides a way to remove/clear an applied promo code.
+8. Application provides shipping option selection (at least Standard and Express).
+9. Application provides shipping address inputs (name, address, city, postal code, country) and stores draft values.
+10. Application renders an Order Summary showing subtotal, discount, tax, shipping, and grand total.
+11. Application fetches totals from the fake API (POST /api/pricing) on initial cart changes and whenever any pricing input changes (cart, promo, shipping, address).
+12. Application does not compute totals on the client (all displayed totals match API response; no client-side “math” as source of truth).
+13. Fake API enforces server-side item pricing (changing client price display cannot affect totals).
+14. Fake API validates promo codes and returns structured errors for invalid/expired codes.
+15. UI displays promo validation errors inline and does not apply discounts when promo is invalid.
+16. Fake API computes tax based on a server-defined rule (e.g., by country) and returns tax amount in the totals breakdown.
+17. Fake API computes shipping cost based on selected shipping option (and any other server rule if implemented).
+18. Application shows a loading state while pricing is recalculating and disables Place Order while pricing is loading/stale.
+19. Application creates an order via fake API (POST /api/orders) and receives an orderId and final totals breakdown.
+20. Application navigates to an Order Confirmation view after successful order creation.
+21. Order Confirmation view displays orderId, purchased items/quantities, and the final totals breakdown.
+22. Application prevents double-submission of orders (Place Order is disabled while submitting; repeated clicks do not create duplicates).
+23. Application handles fake API 500 errors by showing a visible error message and providing a retry/recovery path.
+24. Application persists cart contents, quantities, promo state, shipping selection, and address draft to localStorage.
+25. Application restores persisted checkout state correctly after a page refresh.
+26. Application provides a Reset Checkout action that clears persisted state and empties the cart.
+27. Application runs without console errors/warnings during normal usage.
+28. Application code is cleanly structured and includes brief comments explaining server-driven pricing and validation error mapping.
+"
