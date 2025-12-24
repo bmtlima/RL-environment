@@ -263,8 +263,7 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
                 # Build/install/server failed - skip LLM judge to save costs
                 self._log("\n[4/4] Skipping LLM Judge (build failed)", prefix="⚖️")
                 judge_results = {
-                    "score": 0,
-                    "pass_rate": 0.0,
+                    "score": 0.0,
                     "reasoning": "Build/install/server checks failed - skipped LLM evaluation",
                     "breakdown": [],
                     "metadata": {
@@ -307,8 +306,8 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
             grade_result = {
                 "automated_checks": grader_results,
                 "llm_evaluation": judge_results,
-                "overall_score": judge_results.get("score", 0),
-                "overall_pass": grader_results.get("overall_pass", False) and judge_results.get("score", 0) >= 2
+                "overall_score": judge_results.get("score", 0.0),
+                "overall_pass": grader_results.get("overall_pass", False) and judge_results.get("score", 0.0) >= 0.5
             }
 
             # Save grade result
@@ -485,18 +484,12 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
 
         # LLM evaluation section
         llm_eval = grade_result.get("llm_evaluation", {})
-        score = llm_eval.get('score', 0)
-        pass_rate = llm_eval.get('pass_rate', 0.0)
-
-        # Score labels
-        score_labels = {0: "Build Failed", 1: "Poor", 2: "Weak", 3: "Good", 4: "Perfect"}
-        score_label = score_labels.get(score, "Unknown")
+        score = llm_eval.get('score', 0.0)
 
         report_lines.extend([
             "## LLM Judge Evaluation",
             "",
-            f"**Overall Score:** {score}/4 ({score_label})",
-            f"**Pass Rate:** {pass_rate:.1%}",
+            f"**Overall Score:** {score:.1%}",
             "",
         ])
 
@@ -527,15 +520,14 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
 
         # Overall result
         overall_pass = grade_result.get("overall_pass", False)
-        overall_score = grade_result.get("overall_score", 0)
-        score_label = score_labels.get(overall_score, "Unknown")
+        overall_score = grade_result.get("overall_score", 0.0)
         report_lines.extend([
             "---",
             "",
             "## Final Result",
             "",
             f"- **Status:** {'✅ PASS' if overall_pass else '❌ FAIL'}",
-            f"- **Final Score:** {overall_score}/4 ({score_label})",
+            f"- **Final Score:** {overall_score:.1%}",
             "",
         ])
 
@@ -601,12 +593,8 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
         print("\n⚖️  LLM EVALUATION")
         print("-" * 70)
         llm_eval = grade_result.get("llm_evaluation", {})
-        score = llm_eval.get("score", 0)
-        pass_rate = llm_eval.get("pass_rate", 0.0)
-        score_labels = {0: "Build Failed", 1: "Poor", 2: "Weak", 3: "Good", 4: "Perfect"}
-        score_label = score_labels.get(score, "Unknown")
-        print(f"  Score:        {score}/4 ({score_label})")
-        print(f"  Pass Rate:    {pass_rate:.1%}")
+        score = llm_eval.get("score", 0.0)
+        print(f"  Score:        {score:.1%}")
 
         # Show breakdown if available (now a list)
         breakdown = llm_eval.get("breakdown", [])
@@ -620,10 +608,9 @@ Provide a breakdown of scores for each criterion and an overall score (0-100).""
         print("-" * 70)
         overall_pass = grade_result.get("overall_pass", False)
         overall_status = "✅ PASS" if overall_pass else "❌ FAIL"
-        overall_score = grade_result.get("overall_score", 0)
-        overall_label = score_labels.get(overall_score, "Unknown")
+        overall_score = grade_result.get("overall_score", 0.0)
         print(f"  Status:       {overall_status}")
-        print(f"  Final Score:  {overall_score}/4 ({overall_label})")
+        print(f"  Final Score:  {overall_score:.1%}")
 
         # Cost (if available in agent_result)
         if "total_cost" in agent_result:

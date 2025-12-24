@@ -375,8 +375,7 @@ Evaluate the code based on the rubric above. Respond with JSON only."""
         Returns:
             Dict with:
             {
-                "score": int (1-4),
-                "pass_rate": float (0.0-1.0),
+                "score": float (0.0-1.0, ratio of passed/total),
                 "reasoning": str,
                 "breakdown": [
                     {
@@ -406,8 +405,7 @@ Evaluate the code based on the rubric above. Respond with JSON only."""
         if not source_files:
             print("⚠️ Warning: No source files found to evaluate")
             return {
-                "score": 1,
-                "pass_rate": 0.0,
+                "score": 0.0,
                 "reasoning": "No source files found in workspace",
                 "breakdown": [],
                 "metadata": {
@@ -433,8 +431,7 @@ Evaluate the code based on the rubric above. Respond with JSON only."""
         if not rubric_items:
             print("⚠️ Warning: No numbered requirements found in rubric")
             return {
-                "score": 1,
-                "pass_rate": 0.0,
+                "score": 0.0,
                 "reasoning": "No numbered requirements found in rubric",
                 "breakdown": [],
                 "metadata": {
@@ -470,29 +467,19 @@ Evaluate the code based on the rubric above. Respond with JSON only."""
         # Calculate stats
         total_items = len(all_results)
         passed_items = sum(1 for item in all_results if item.get("status") == "PASS")
-        pass_rate = passed_items / total_items if total_items > 0 else 0.0
 
-        # Determine bucket score (1-4)
-        if pass_rate == 1.0:
-            score = 4  # Perfect
-        elif pass_rate >= 0.75:
-            score = 3  # Good
-        elif pass_rate >= 0.25:
-            score = 2  # Weak
-        else:
-            score = 1  # Poor
+        # Score = ratio of passed items (0.0 to 1.0)
+        score = passed_items / total_items if total_items > 0 else 0.0
 
         reasoning = (
             f"Evaluated {total_items} items in {num_batches} batches. "
-            f"{passed_items}/{total_items} requirements passed ({pass_rate:.1%}). "
-            f"Score: {score}/4."
+            f"{passed_items}/{total_items} requirements passed ({score:.1%})."
         )
 
-        print(f"✅ Evaluation complete: {passed_items}/{total_items} passed ({pass_rate:.1%}) → Score: {score}/4")
+        print(f"✅ Evaluation complete: {passed_items}/{total_items} passed → Score: {score:.1%}")
 
         return {
             "score": score,
-            "pass_rate": pass_rate,
             "reasoning": reasoning,
             "breakdown": all_results,
             "metadata": {
