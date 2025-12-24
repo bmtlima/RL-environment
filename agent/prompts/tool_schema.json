@@ -65,7 +65,12 @@
       "description": "Install project dependencies using the package manager (pnpm or npm). Automatically uses caching and silent mode. This is more efficient than running 'pnpm install' manually with run_command because it handles package manager detection and uses optimized flags.",
       "parameters": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "force": {
+            "type": "boolean",
+            "description": "Force reinstall all dependencies (optional, defaults to false)"
+          }
+        }
       }
     }
   },
@@ -79,8 +84,7 @@
         "properties": {
           "port": {
             "type": "integer",
-            "description": "Port number for the server (default: 3000)",
-            "default": 3000
+            "description": "Port number for the server (defaults to 3000 if not specified)"
           }
         }
       }

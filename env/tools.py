@@ -379,13 +379,16 @@ class Tools:
             }
         )
 
-    def install_deps(self) -> ToolResult:
+    def install_deps(self, force: bool = False) -> ToolResult:
         """
         Install dependencies using pnpm, forcing the architecture to match Node.js.
+
+        Args:
+            force: Force reinstall (optional, defaults to False). Note: cleanup is always performed.
         """
         try:
             # Log agent action
-            self._log_agent("install_deps", "Installing dependencies with pnpm")
+            self._log_agent("install_deps", f"Installing dependencies with pnpm (force={force})")
 
             # 1. CLEANUP
             # Clear old artifacts to ensure fresh resolution
