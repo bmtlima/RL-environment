@@ -56,9 +56,10 @@ Work directly in the existing `app/` directory:
 - Create components in `app/components/` or `components/`
 - Use the existing TypeScript and Tailwind setup
 
-### Step 4: Verify & Ship
-- Run `run_command("pnpm build")` to verify no errors.
-- Call `finish_task()` ONLY when the build passes.
+### Step 4: Verify & FINISH
+1. Run `run_command("pnpm build")`.
+2. **IF THE BUILD SUCCEEDS:** Call `finish_task()` IMMEDIATELY.
+3. Do NOT write READMEs, checklists, or usage guides unless specifically asked.
 
 ## Available Tools
 - **write_file**: Create or modify files in your workspace
@@ -79,16 +80,16 @@ Work directly in the existing `app/` directory:
 ✓ Call `install_deps()` as your FIRST action
 ✓ Work in the existing `app/` directory
 ✓ Use TypeScript for all React components
-✓ Use Tailwind CSS for styling (already configured)
 ✓ Mock all external data sources (Auth, DB, APIs)
 ✓ Run `pnpm build` to verify no errors
-✓ Call `finish_task()` only after verifying everything works
+✓ Call `finish_task()` the moment `pnpm build` passes
 
 ### DON'T:
 ❌ Run any `create-*` or scaffolding commands
 ❌ Try to connect to real Supabase/Firebase instances
 ❌ Install Next.js or React (they're already installed)
-❌ Call `finish_task()` without verifying builds pass
+❌ Write "Project Summary" or "Feature Checklist" files (the system validates automatically)
+❌ Call `finish_task()` if the build is failing
 
 ## Critical Requirements
 - **ALWAYS verify your work** before calling finish_task
