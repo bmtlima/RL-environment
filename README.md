@@ -79,7 +79,7 @@ python3 env/runner.py [OPTIONS] [TASK]
 
 ### Examples
 
-**1. Run with original huggingface dataset
+**1. Run with original huggingface dataset**
 ```bash
 python3 env/runner.py --data data/prompts.csv --row-index 0
 ```
