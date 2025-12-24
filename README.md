@@ -84,6 +84,7 @@ python3 env/runner.py [OPTIONS] [TASK]
 - `--model NAME`: Model identifier from `configs/models.yaml` (default: gemini-flash)
 - `--template NAME`: Template from `templates/` directory (default: nextjs-starter)
 - `--max-steps N`: Maximum agent steps (default: 50)
+- `--step-delay SECONDS`: Delay between consecutive API calls to avoid rate limits (default: 0.0)
 - `--quiet`: Disable verbose logging
 
 ### Examples
@@ -113,7 +114,16 @@ python3 env/runner.py \
   --max-steps 30
 ```
 
-**4. Run multiple episodes:**
+**4. Avoid rate limits with step delay:**
+```bash
+# Claude Sonnet with 4-second delay between API calls
+python3 env/runner.py \
+  --data data/prompts.csv \
+  --model claude-sonnet \
+  --step-delay 4
+```
+
+**5. Run multiple episodes:**
 ```bash
 # Evaluate models on first 5 tasks
 for i in {0..4}; do
@@ -428,7 +438,12 @@ cp configs/env.yaml.example configs/env.yaml
 # Then edit configs/env.yaml and add your actual API keys
 ```
 
-**5. Agent gets stuck in loop**
+**5. Rate limit errors (e.g., Anthropic API)**
+- Use `--step-delay` to add a delay between API calls
+- Recommended: `--step-delay 4` for Claude Sonnet (30k tokens/min limit)
+- Example: `python3 env/runner.py --model claude-sonnet --step-delay 4`
+
+**6. Agent gets stuck in loop**
 - Reduce `--max-steps` to force earlier termination
 - Check `runs/<timestamp>/workspace` to see what agent built
 

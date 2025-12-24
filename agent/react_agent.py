@@ -9,7 +9,6 @@ import json
 import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Callable
-import litellm
 from litellm import completion
 
 from env.sandbox import Sandbox
