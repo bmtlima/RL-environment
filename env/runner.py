@@ -46,7 +46,8 @@ class EpisodeRunner:
         template_name: str = "nextjs-starter",
         model_name: str = "gpt-4o-mini",
         max_steps: int = 50,
-        verbose: bool = True
+        verbose: bool = True,
+        step_delay: float = 0.0
     ):
         """
         Initialize the episode runner.
@@ -56,11 +57,13 @@ class EpisodeRunner:
             model_name: Model identifier from configs/models.yaml
             max_steps: Maximum agent steps
             verbose: Whether to print verbose logs
+            step_delay: Delay in seconds between consecutive API calls (default: 0.0)
         """
         self.template_name = template_name
         self.model_name = model_name
         self.max_steps = max_steps
         self.verbose = verbose
+        self.step_delay = step_delay
 
         # Paths (relative to project root)
         self.project_root = Path(__file__).parent.parent
@@ -233,6 +236,8 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
         self._log("\n[2/4] Running Agent", prefix="🤖")
         self._log(f"Model: {self.model_name}", prefix="  ")
         self._log(f"Max steps: {self.max_steps}", prefix="  ")
+        if self.step_delay > 0:
+            self._log(f"Step delay: {self.step_delay}s (to avoid rate limits)", prefix="  ")
         self._log(f"Task: {task[:100]}...", prefix="  ")
 
         # Initialize sandbox and agent
@@ -243,7 +248,8 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
             max_steps=self.max_steps,
             verbose=self.verbose,
             agent_log_path=self.agent_log_path,
-            system_log_path=self.system_log_path
+            system_log_path=self.system_log_path,
+            step_delay=self.step_delay
         )
 
         try:
@@ -739,7 +745,8 @@ def run_episode(
     max_steps: int = 50,
     verbose: bool = True,
     rubric: Optional[str] = None,
-    app_name: Optional[str] = None
+    app_name: Optional[str] = None,
+    step_delay: float = 0.0
 ) -> Dict[str, Any]:
     """
     Convenience function to run a single episode.
@@ -752,6 +759,7 @@ def run_episode(
         verbose: Whether to print logs
         rubric: Grading rubric (optional)
         app_name: Application name (optional)
+        step_delay: Delay in seconds between consecutive API calls (default: 0.0)
 
     Returns:
         Episode result dictionary
@@ -760,7 +768,8 @@ def run_episode(
         template_name=template_name,
         model_name=model_name,
         max_steps=max_steps,
-        verbose=verbose
+        verbose=verbose,
+        step_delay=step_delay
     )
     return runner.run_episode(task=task, rubric=rubric, app_name=app_name)
 
@@ -814,6 +823,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Disable verbose logging"
     )
+    parser.add_argument(
+        "--step-delay",
+        type=float,
+        default=0.0,
+        help="Delay in seconds between consecutive API calls to avoid rate limits (default: 0.0)"
+    )
 
     args = parser.parse_args()
 
@@ -853,7 +868,8 @@ if __name__ == "__main__":
                 template_name=args.template,
                 model_name=litellm_model,
                 max_steps=args.max_steps,
-                verbose=not args.quiet
+                verbose=not args.quiet,
+                step_delay=args.step_delay
             )
 
             # Construct mock mode prompt
@@ -880,7 +896,8 @@ if __name__ == "__main__":
             template_name=args.template,
             model_name=litellm_model,
             max_steps=args.max_steps,
-            verbose=not args.quiet
+            verbose=not args.quiet,
+            step_delay=args.step_delay
         )
     else:
         # Default task
@@ -890,7 +907,8 @@ if __name__ == "__main__":
             template_name=args.template,
             model_name=litellm_model,
             max_steps=args.max_steps,
-            verbose=not args.quiet
+            verbose=not args.quiet,
+            step_delay=args.step_delay
         )
 
     print("\n✅ Episode completed successfully!")

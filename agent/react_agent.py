@@ -6,6 +6,7 @@ plan, execute, and verify actions until a task is complete.
 """
 
 import json
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Callable
 import litellm
@@ -34,7 +35,8 @@ class ReActAgent:
         max_steps: int = 50,
         verbose: bool = True,
         agent_log_path: Optional[Path] = None,
-        system_log_path: Optional[Path] = None
+        system_log_path: Optional[Path] = None,
+        step_delay: float = 0.0
     ):
         """
         Initialize the ReAct agent.
@@ -46,11 +48,13 @@ class ReActAgent:
             verbose: Whether to print agent actions
             agent_log_path: Path to agent.log for tool call logging
             system_log_path: Path to system.log for command output logging
+            step_delay: Delay in seconds between consecutive API calls (default: 0.0)
         """
         self.sandbox = sandbox
         self.model_name = model_name
         self.max_steps = max_steps
         self.verbose = verbose
+        self.step_delay = step_delay
 
         # Initialize tools with log paths
         self.tools = Tools(
@@ -225,6 +229,11 @@ class ReActAgent:
                     "steps": self.step_count,
                     "is_done": self.is_done
                 }
+
+            # Add delay between consecutive API calls (but not after the last step)
+            if self.step_delay > 0 and not self.is_done and self.step_count < self.max_steps:
+                self._log(f"Waiting {self.step_delay}s before next step...", prefix="⏱️")
+                time.sleep(self.step_delay)
 
         # Final status
         if self.is_done:
