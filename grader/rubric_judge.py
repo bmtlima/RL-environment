@@ -26,12 +26,12 @@ class RubricJudge:
     based on a provided rubric.
     """
 
-    def __init__(self, model: str = "gpt-4o-mini"):
+    def __init__(self, model: str = "gemini/gemini-2.0-flash-001"):
         """
         Initialize the rubric judge.
 
         Args:
-            model: LiteLLM model identifier (default: gpt-4o-mini)
+            model: LiteLLM model identifier (default: gemini/gemini-2.0-flash-001)
         """
         self.model = model
 
@@ -229,7 +229,9 @@ Evaluate the code based on the rubric above. Respond with JSON only."""
                 model=self.model,
                 messages=messages,
                 temperature=0.3,  # Lower temperature for more consistent evaluation
-                max_tokens=2000
+                max_tokens=2000,
+                num_retries=3,  # Retry on rate limits with exponential backoff
+                timeout=60  # 60 second timeout per request
             )
 
             response_text = response.choices[0].message.content.strip()
