@@ -223,7 +223,7 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
             Dictionary with episode results
         """
         self._log("="*60, prefix="")
-        self._log("STARTING EPISODE", prefix="🚀")
+        self._log("STARTING EPISODE", prefix="")
         if app_name:
             self._log(f"App: {app_name}", prefix="  ")
         self._log("="*60, prefix="")
@@ -348,7 +348,7 @@ Your goal is to build a FUNCTIONAL UI that demonstrates the logic, using simulat
             # CRITICAL: Clean up background processes (e.g., dev servers)
             # This prevents zombie Node.js processes from running indefinitely
             if self.sandbox:
-                self._log("\nCleaning up background processes...", prefix="🧹")
+                self._log("\nCleaning up background processes...", prefix="")
                 self.sandbox.cleanup()
                 self._log("✓ Cleanup complete", prefix="  ")
 

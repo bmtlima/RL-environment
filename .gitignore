@@ -56,10 +56,12 @@ test_phase2.py
 test_phase3.py
 test_phase4.py
 test_background_processes.py
+test_llm.py
 test_grader.py
 test_judge.py
-test_llm.py
-
 
 # TODO
 TODO.md
+
+# jupyter notebook
+playground.ipynb
