@@ -3,6 +3,7 @@
 A reproducible RL-style evaluation harness for measuring how well LLMs act as autonomous agents to create working "0→1" web applications from product prompts—covering planning, coding, debugging, running, and shipping.
 
 Slides: https://docs.google.com/presentation/d/1qjJMSwOZm5m8hZjeSUO6GwXu9gDM9bZWFiFpASdD5sg/edit?usp=sharing
+
 Demo: <insert-video>
 
 ## Quick Start
